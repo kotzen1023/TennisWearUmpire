@@ -7,19 +7,19 @@ import android.hardware.SensorManager;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 public class InitData {
-    public static SensorManager mSensorManager;
-    public static Sensor mAccelerometer;
-    public static Sensor mGravity;
-    public static Sensor mGyroscope;
-    public static Sensor mGyroscope_uncalibrated;
-    public static Sensor mLinearAcceration;
-    public static Sensor mRotationVector;
-    public static Sensor mStepCounter;
-    public static boolean is_running;
-    public static SensorEventListener accelerometerListener;
+    public SensorManager mSensorManager;
+    public Sensor mAccelerometer;
+    public Sensor mGravity;
+    public Sensor mGyroscope;
+    public Sensor mGyroscope_uncalibrated;
+    public Sensor mLinearAcceration;
+    public Sensor mRotationVector;
+    public Sensor mStepCounter;
+    public boolean is_running;
+    public SensorEventListener accelerometerListener;
     //public static SensorEventListener linearaccelerometerListener;
-    public static SensorEventListener rotationVectorListener;
-    public static SensorEventListener stepCountListener;
+    public SensorEventListener rotationVectorListener;
+    public SensorEventListener stepCountListener;
 
     //bluetooth
     /**
@@ -47,9 +47,9 @@ public class InitData {
      */
     //public static BluetoothService mChatService = null;
 
-    public static boolean is_voice_enable = false;
+    public boolean is_voice_enable = false;
 
-    public static boolean is_debug = false;
+    public boolean is_debug = false;
 
-    public static GoogleApiClient mGoogleApiClient;
+    public GoogleApiClient mGoogleApiClient;
 }

@@ -18,7 +18,9 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.seventhmoon.tenniswearumpire.Data.InitData.mGoogleApiClient;
+import static com.seventhmoon.tenniswearumpire.SetsActivity.myData;
+
+//import static com.seventhmoon.tenniswearboard.Data.InitData.mGoogleApiClient;
 
 public class DataLayerListenerService extends WearableListenerService {
     private static final String TAG = DataLayerListenerService.class.getName();
@@ -71,14 +73,14 @@ public class DataLayerListenerService extends WearableListenerService {
             throw new IllegalArgumentException("Asset must be non-null");
         }
         ConnectionResult result =
-                mGoogleApiClient.blockingConnect(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                myData.mGoogleApiClient.blockingConnect(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         if (!result.isSuccess()) {
             return null;
         }
         // convert asset into a file descriptor and block until it's ready
         InputStream assetInputStream = Wearable.DataApi.getFdForAsset(
-                mGoogleApiClient, asset).await().getInputStream();
-        mGoogleApiClient.disconnect();
+                myData.mGoogleApiClient, asset).await().getInputStream();
+        myData.mGoogleApiClient.disconnect();
 
         if (assetInputStream == null) {
             Log.w(TAG, "Requested an unknown Asset.");

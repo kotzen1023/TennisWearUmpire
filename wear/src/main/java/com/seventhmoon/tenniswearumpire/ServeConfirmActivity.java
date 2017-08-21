@@ -22,16 +22,20 @@ public class ServeConfirmActivity extends WearableActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setAmbientEnabled();
+
         Log.d(TAG, "onCreate");
 
         setContentView(R.layout.dialog_layout);
         context = getBaseContext();
         final String setup_set = getIntent().getStringExtra("SETUP_SET");
+        final String setup_games = getIntent().getStringExtra("SETUP_GAMES");
         final String setup_tiebreak = getIntent().getStringExtra("SETUP_TIEBREAK");
         final String setup_deuce = getIntent().getStringExtra("SETUP_DEUCE");
         final String setup_serve = getIntent().getStringExtra("SETUP_SERVE");
 
         Log.e(TAG, "setup_set = "+setup_set);
+        Log.e(TAG, "setup_games = "+setup_games);
         Log.e(TAG, "setup_tiebreak = "+setup_tiebreak);
         Log.e(TAG, "setup_deuce = "+setup_deuce);
         Log.e(TAG, "setup_serve = "+setup_serve);
@@ -67,8 +71,9 @@ public class ServeConfirmActivity extends WearableActivity {
         btnOk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(ServeConfirmActivity.this, MainMenu.class);
+                Intent intent = new Intent(ServeConfirmActivity.this, PointActivity.class);
                 intent.putExtra("SETUP_SET", setup_set);
+                intent.putExtra("SETUP_GAMES", setup_games);
                 intent.putExtra("SETUP_TIEBREAK", setup_tiebreak);
                 intent.putExtra("SETUP_DEUCE",  setup_deuce);
                 intent.putExtra("SETUP_SERVE", setup_serve);
@@ -103,5 +108,23 @@ public class ServeConfirmActivity extends WearableActivity {
 
         super.onDestroy();
 
+    }
+
+    @Override
+    public void onEnterAmbient(Bundle ambientDetails) {
+        super.onEnterAmbient(ambientDetails);
+        //updateDisplay();
+    }
+
+    @Override
+    public void onUpdateAmbient() {
+        super.onUpdateAmbient();
+        //updateDisplay();
+    }
+
+    @Override
+    public void onExitAmbient() {
+        //updateDisplay();
+        super.onExitAmbient();
     }
 }

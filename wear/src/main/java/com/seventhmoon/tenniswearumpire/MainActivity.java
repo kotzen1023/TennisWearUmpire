@@ -30,15 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.seventhmoon.tenniswearumpire.Audio.FileOperation.init_voice_folder;
-import static com.seventhmoon.tenniswearumpire.Data.InitData.mAccelerometer;
-
-import static com.seventhmoon.tenniswearumpire.Data.InitData.mGravity;
-import static com.seventhmoon.tenniswearumpire.Data.InitData.mGyroscope;
-import static com.seventhmoon.tenniswearumpire.Data.InitData.mGyroscope_uncalibrated;
-import static com.seventhmoon.tenniswearumpire.Data.InitData.mLinearAcceration;
-import static com.seventhmoon.tenniswearumpire.Data.InitData.mRotationVector;
-import static com.seventhmoon.tenniswearumpire.Data.InitData.mSensorManager;
-import static com.seventhmoon.tenniswearumpire.Data.InitData.mStepCounter;
+import static com.seventhmoon.tenniswearumpire.SetsActivity.myData;
 
 
 public class MainActivity extends WearableActivity {
@@ -59,45 +51,53 @@ public class MainActivity extends WearableActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        setAmbientEnabled();
+
         boolean permission_result;
 
         Log.d(TAG, "onCreate");
 
-        Log.e(TAG, "InitData.is_running = "+ InitData.is_running);
+        //Log.e(TAG, "InitData.is_running = "+ InitData.is_running);
 
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (myData != null) {
+            Log.e(TAG, "InitData.is_running = "+ myData.is_running);
+        } else {
+            Log.e(TAG, "myData = null");
+        }
 
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        SensorManager mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (mAccelerometer != null) {
             Log.e(TAG, "Has mAccelerometer sensor!");
         }
 
-        mGravity = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+        Sensor mGravity = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
         if (mGravity != null) {
             Log.e(TAG, "Has gravity sensor!");
         }
 
-        mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        Sensor mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         if (mGyroscope != null) {
             Log.e(TAG, "Has gyroscope sensor!");
         }
 
-        mGyroscope_uncalibrated = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
+        Sensor mGyroscope_uncalibrated = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
         if (mGyroscope_uncalibrated != null) {
             Log.e(TAG, "Has gyroscope uncalibrate sensor!");
         }
 
-        mLinearAcceration = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        Sensor mLinearAcceration = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         if (mLinearAcceration != null) {
             Log.e(TAG, "Has linear acceleration sensor!");
         }
 
-        mRotationVector = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        Sensor mRotationVector = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         if (mRotationVector != null) {
             Log.e(TAG, "Has rotation vector sensor!");
         }
 
-        mStepCounter = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+        Sensor mStepCounter = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         if (mStepCounter != null) {
             Log.e(TAG, "Has step counter sensor!");
 
@@ -106,15 +106,25 @@ public class MainActivity extends WearableActivity {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             init_voice_folder();
             Intent intent;
-            if (InitData.is_running) {
-                Log.d(TAG, "is running, go GameActivity");
-                intent = new Intent(MainActivity.this, MainMenu.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
-            } else {
-                Log.d(TAG, "is not running, go SetupMain");
+            if (myData != null) {
+                Log.e(TAG, "myData.is_running = "+ myData.is_running);
+                if (myData.is_running) {
+                    Log.d(TAG, "is running, go PointActivity");
+                    intent = new Intent(MainActivity.this, PointActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(intent);
+                    finish();
+                } else {
+                    Log.d(TAG, "is not running, go SetsActivity");
+                    intent = new Intent(MainActivity.this, SetsActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(intent);
+                    finish();
+                }
+            } else { //myData == null
+                Log.d(TAG, "is not running, go SetsActivity");
                 intent = new Intent(MainActivity.this, SetsActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -129,16 +139,25 @@ public class MainActivity extends WearableActivity {
                 init_voice_folder();
 
                 Intent intent;
-                if (InitData.is_running) {
-                    Log.d(TAG, "is running, go GameActivity");
-                    intent = new Intent(MainActivity.this, MainMenu.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    startActivity(intent);
-                    finish();
-                } else {
-                    Log.d(TAG, "is not running, go SetupMain");
-                    //intent = new Intent(MainActivity.this, SetupMain.class);
+                if (myData != null) {
+                    Log.e(TAG, "myData.is_running = "+ myData.is_running);
+                    if (myData.is_running) {
+                        Log.d(TAG, "is running, go PointActivity");
+                        intent = new Intent(MainActivity.this, PointActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        Log.d(TAG, "is not running, go SetsActivity");
+                        intent = new Intent(MainActivity.this, SetsActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(intent);
+                        finish();
+                    }
+                } else { //myData == null
+                    Log.d(TAG, "is not running, go SetsActivity");
                     intent = new Intent(MainActivity.this, SetsActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -279,16 +298,28 @@ public class MainActivity extends WearableActivity {
                         // process the normal flow
                         //else any one or both the permissions are not granted
 
+                        init_voice_folder();
+
                         Intent intent;
-                        if (InitData.is_running) {
-                            Log.d(TAG, "is running, go GameActivity");
-                            intent = new Intent(MainActivity.this, MainMenu.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                            startActivity(intent);
-                            finish();
-                        } else {
-                            Log.d(TAG, "is not running, go SetupMain");
+                        if (myData != null) {
+                            Log.e(TAG, "myData.is_running = "+ myData.is_running);
+                            if (myData.is_running) {
+                                Log.d(TAG, "is running, go PointActivity");
+                                intent = new Intent(MainActivity.this, PointActivity.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                                startActivity(intent);
+                                finish();
+                            } else {
+                                Log.d(TAG, "is not running, go SetsActivity");
+                                intent = new Intent(MainActivity.this, SetsActivity.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                                startActivity(intent);
+                                finish();
+                            }
+                        } else { //myData == null
+                            Log.d(TAG, "is not running, go SetsActivity");
                             intent = new Intent(MainActivity.this, SetsActivity.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                             intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);

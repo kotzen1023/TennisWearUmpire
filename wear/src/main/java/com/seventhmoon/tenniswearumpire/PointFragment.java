@@ -27,7 +27,7 @@ import static com.seventhmoon.tenniswearumpire.MainMenu.set;
 import static com.seventhmoon.tenniswearumpire.MainMenu.stack;
 import static com.seventhmoon.tenniswearumpire.MainMenu.startTime;
 import static com.seventhmoon.tenniswearumpire.MainMenu.endTime;
-
+import static com.seventhmoon.tenniswearumpire.MainMenu.toast;
 
 
 public class PointFragment extends Fragment {
@@ -53,6 +53,8 @@ public class PointFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         Log.d(TAG, "onCreateView");
+
+
 
         context = getContext();
 
@@ -401,9 +403,9 @@ public class PointFragment extends Fragment {
         }
     }
 
-    public void toast(String message) {
+    /*public void toast(String message) {
         Toast toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
         toast.setGravity(Gravity.CENTER_HORIZONTAL|Gravity.CENTER_VERTICAL, 0, 0);
         toast.show();
-    }
+    }*/
 }

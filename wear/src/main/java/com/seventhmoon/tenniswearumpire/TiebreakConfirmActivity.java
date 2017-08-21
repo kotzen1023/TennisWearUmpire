@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 
 public class TiebreakConfirmActivity extends WearableActivity {
-    private static final String TAG = SetsConfirmActivity.class.getName();
+    private static final String TAG = TiebreakConfirmActivity.class.getName();
 
     Context context;
     private TextView txtTitle;
@@ -24,12 +24,17 @@ public class TiebreakConfirmActivity extends WearableActivity {
 
         Log.d(TAG, "onCreate");
 
+        setAmbientEnabled();
+
         setContentView(R.layout.dialog_layout);
         context = getBaseContext();
         final String setup_set = getIntent().getStringExtra("SETUP_SET");
+        final String setup_games = getIntent().getStringExtra("SETUP_GAMES");
         final String setup_tiebreak = getIntent().getStringExtra("SETUP_TIEBREAK");
 
+
         Log.e(TAG, "setup_set = "+setup_set);
+        Log.e(TAG, "setup_games = "+setup_games);
         Log.e(TAG, "setup_tiebreak = "+setup_tiebreak);
 
         txtTitle = (TextView) findViewById(R.id.txtTitle);
@@ -65,6 +70,7 @@ public class TiebreakConfirmActivity extends WearableActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(TiebreakConfirmActivity.this, DeuceActivity.class);
                 intent.putExtra("SETUP_SET", setup_set);
+                intent.putExtra("SETUP_GAMES", setup_games);
                 intent.putExtra("SETUP_TIEBREAK", setup_tiebreak);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -97,5 +103,23 @@ public class TiebreakConfirmActivity extends WearableActivity {
 
         super.onDestroy();
 
+    }
+
+    @Override
+    public void onEnterAmbient(Bundle ambientDetails) {
+        super.onEnterAmbient(ambientDetails);
+        //updateDisplay();
+    }
+
+    @Override
+    public void onUpdateAmbient() {
+        super.onUpdateAmbient();
+        //updateDisplay();
+    }
+
+    @Override
+    public void onExitAmbient() {
+        //updateDisplay();
+        super.onExitAmbient();
     }
 }

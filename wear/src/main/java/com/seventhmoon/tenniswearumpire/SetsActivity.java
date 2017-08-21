@@ -4,10 +4,12 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 
 import android.support.wearable.activity.WearableActivity;
 
+import android.support.wearable.view.BoxInsetLayout;
 import android.support.wearable.view.CircledImageView;
 import android.util.Log;
 import android.view.View;
@@ -17,11 +19,13 @@ import com.aigestudio.wheelpicker.WheelPicker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.Wearable;
+import com.seventhmoon.tenniswearumpire.Data.InitData;
 
 
 import java.util.ArrayList;
+import java.util.Date;
 
-import static com.seventhmoon.tenniswearumpire.Data.InitData.mGoogleApiClient;
+//import static com.seventhmoon.tenniswearboard.Data.InitData.mGoogleApiClient;
 
 
 
@@ -30,7 +34,7 @@ public class SetsActivity extends WearableActivity {
 
     Context context;
 
-    //WearableRecyclerView wearableRecyclerView;
+    private BoxInsetLayout mContainerView;
 
     WheelPicker wheelPicker;
 
@@ -41,17 +45,32 @@ public class SetsActivity extends WearableActivity {
 
     AlertDialog ad;
 
+    public static InitData myData;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sets_layout);
 
+        context = getBaseContext();
+
+        setAmbientEnabled();
+
+        mContainerView = (BoxInsetLayout) findViewById(R.id.set_container);
+        //mTextView = (TextView) findViewById(R.id.text);
+        //mClockView = (TextView) findViewById(R.id.clock);
+
         Log.d(TAG, "onCreate");
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
+        myData = new InitData();
+
+        myData.mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        myData.mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
                     public void onConnected(Bundle connectionHint) {
+                        Log.d(TAG, "mGoogleApiClient ==> onConnected");
                     }
                     @Override
                     public void onConnectionSuspended(int cause) {
@@ -65,9 +84,9 @@ public class SetsActivity extends WearableActivity {
                 .addApi(Wearable.API)
                 .build();
 
-        mGoogleApiClient.connect();
+        myData.mGoogleApiClient.connect();
 
-        context = getBaseContext();
+
 
         wheelPicker = (WheelPicker) findViewById(R.id.wheel_picker_sets);
 
@@ -132,7 +151,7 @@ public class SetsActivity extends WearableActivity {
             ad.cancel();
 
         super.onPause();
-        //mGoogleApiClient.disconnect();
+
     }
 
     @Override
@@ -145,80 +164,42 @@ public class SetsActivity extends WearableActivity {
     @Override
     protected void onDestroy() {
         Log.d(TAG, "onDestroy");
-        mGoogleApiClient.disconnect();
+        myData.mGoogleApiClient.disconnect();
         super.onDestroy();
 
     }
 
+    @Override
+    public void onEnterAmbient(Bundle ambientDetails) {
+        super.onEnterAmbient(ambientDetails);
+        //updateDisplay();
+    }
 
+    @Override
+    public void onUpdateAmbient() {
+        super.onUpdateAmbient();
+        //updateDisplay();
+    }
 
-    protected void showResetlog() {
+    @Override
+    public void onExitAmbient() {
+        //updateDisplay();
+        super.onExitAmbient();
+    }
 
-        final View promptView = View.inflate(SetsActivity.this, R.layout.dialog_layout, null);
+    private void updateDisplay() {
+        if (isAmbient()) {
+            mContainerView.setBackgroundColor(getResources().getColor(android.R.color.black));
+            wheelPicker.setItemTextColor(Color.WHITE);
+            //mTextView.setTextColor(getResources().getColor(android.R.color.white));
+            //mClockView.setVisibility(View.VISIBLE);
 
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(SetsActivity.this);
-        alertDialogBuilder.setView(promptView);
-
-
-        final TextView title = (TextView) promptView.findViewById(R.id.txtTitle);
-        CircledImageView btnCancel = (CircledImageView) promptView.findViewById(R.id.btn_cancel);
-        CircledImageView btnConfirm = (CircledImageView) promptView.findViewById(R.id.btn_ok);
-        //final TextView msg = (TextView) promptView.findViewById(R.id.txtMsg);
-        //final Button cancel = (Button) promptView.findViewById(R.id.dialog_cancel);
-        //final Button confirm = (Button) promptView.findViewById(R.id.dialog_confirm);
-
-
-
-        title.setTextColor(Color.BLACK);
-        title.setText(getResources().getString(R.string.select_sets)+"\n"+myList.get(selected));
-
-        btnConfirm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(SetsActivity.this, TiebreakActivity.class);
-                intent.putExtra("SETUP_SET", String.valueOf(selected));
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-            }
-        });
-
-        btnCancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ad.dismiss();
-            }
-        });
-
-        //msg.setTextColor(Color.BLACK);
-        //msg.setText(myList.get(selected).toString());
-        //alertDialogBuilder.setTitle(getResources().getString(R.string.game_reset));
-        //alertDialogBuilder.setMessage(getResources().getString(R.string.game_reset));
-        //final ImageView imgYes = (ImageView) promptView.findViewById(R.id.imgYes);
-        //final ImageView imgNo = (ImageView) promptView.findViewById(R.id.imgYes);
-
-        // setup a dialog window
-
-
-        /*alertDialogBuilder.setCancelable(false);
-        alertDialogBuilder.setPositiveButton(getResources().getString(R.string.dialog_confirm), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                Intent intent = new Intent(SetsActivity.this, TiebreakActivity.class);
-                intent.putExtra("SETUP_SET", String.valueOf(selected));
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                //finish();
-
-            }
-        });
-        alertDialogBuilder.setNegativeButton(getResources().getString(R.string.dialog_cancel), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-
-            }
-        });*/
-
-
-        ad = alertDialogBuilder.show();
+            //mClockView.setText(AMBIENT_DATE_FORMAT.format(new Date()));
+        } else {
+            mContainerView.setBackground(null);
+            wheelPicker.setItemTextColor(Color.BLACK);
+            //mTextView.setTextColor(getResources().getColor(android.R.color.black));
+            //mClockView.setVisibility(View.GONE);
+        }
     }
 }

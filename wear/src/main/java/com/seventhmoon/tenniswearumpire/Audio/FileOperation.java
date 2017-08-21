@@ -28,7 +28,7 @@ public class FileOperation {
             RootDirectory = Environment.getExternalStorageDirectory();
         }
 
-        File folder_tennis = new File(RootDirectory.getAbsolutePath() + "/.tennisVoice/");
+        File folder_tennis = new File(RootDirectory.getAbsolutePath() + "/.tennisWearBoard/");
 
         if(!folder_tennis.exists()) {
             Log.i(TAG, "folder not exist");
@@ -53,7 +53,9 @@ public class FileOperation {
         return ret;
     }
 
-    public static boolean check_voice_file_exist(String fileName) {
+
+
+    public static boolean check_user_voice_exist(String fileName) {
         Log.i(TAG, "check_file_exist --- start ---");
         boolean ret = false;
 
@@ -62,12 +64,15 @@ public class FileOperation {
             RootDirectory = Environment.getExternalStorageDirectory();
         }
 
-        File file = new File(RootDirectory.getAbsolutePath() + "/.tennisVoice/"+fileName);
+        File file = new File(RootDirectory.getAbsolutePath() + "/.tennisWearBoard/user/"+fileName);
+        Log.d(TAG, "File filename = "+fileName);
 
         if(file.exists()) {
             Log.i(TAG, "file "+fileName+" exist");
             ret = true;
         }
+
+        Log.i(TAG, "check_file_exist --- end ---");
 
         return ret;
     }
@@ -81,7 +86,7 @@ public class FileOperation {
             RootDirectory = Environment.getExternalStorageDirectory();
         }
         //check folder
-        File folder = new File(RootDirectory.getAbsolutePath() + "/.tennisVoice");
+        File folder = new File(RootDirectory.getAbsolutePath() + "/.tennisWearBoard");
 
         if(!folder.exists()) {
             Log.i(TAG, "folder not exist");

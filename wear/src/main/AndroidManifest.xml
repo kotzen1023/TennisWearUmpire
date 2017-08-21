@@ -33,6 +33,8 @@
 
         <activity android:name=".SetsActivity"/>
         <activity android:name=".SetsConfirmActivity"/>
+        <activity android:name=".GamesInSetActivity"/>
+        <activity android:name=".GamesInSetComfirmActivity"/>
         <activity android:name=".TiebreakActivity"/>
         <activity android:name=".TiebreakConfirmActivity"/>
         <activity android:name=".DeuceActivity"/>
@@ -40,6 +42,8 @@
         <activity android:name=".ServeActivity"/>
         <activity android:name=".ServeConfirmActivity"/>
         <activity android:name=".MainMenu"/>
+        <activity android:name=".PointActivity"/>
+        <activity android:name=".GameActivity"/>
 
         <service android:name=".Service.DataLayerListenerService">
             <intent-filter>

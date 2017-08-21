@@ -34,6 +34,7 @@ public class TiebreakActivity extends WearableActivity {
 
     AlertDialog ad;
     private static String sets;
+    private static String games;
     //private static String tiebreak;
 
     @Override
@@ -41,13 +42,17 @@ public class TiebreakActivity extends WearableActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.tiebreak_layout);
 
+        setAmbientEnabled();
+
         Log.d(TAG, "onCreate");
 
         context = getBaseContext();
 
         sets = getIntent().getStringExtra("SETUP_SET");
+        games = getIntent().getStringExtra("SETUP_GAMES");
 
         Log.d(TAG, "Get set = "+sets);
+        Log.d(TAG, "Get games = "+games);
 
 
         wheelPicker = (WheelPicker) findViewById(R.id.wheel_picker_tiebreak);
@@ -98,6 +103,7 @@ public class TiebreakActivity extends WearableActivity {
                 //showResetlog();
                 Intent intent = new Intent(TiebreakActivity.this, TiebreakConfirmActivity.class);
                 intent.putExtra("SETUP_SET", sets);
+                intent.putExtra("SETUP_GAMES", games);
                 intent.putExtra("SETUP_TIEBREAK",  String.valueOf(selected));
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -132,58 +138,21 @@ public class TiebreakActivity extends WearableActivity {
 
     }
 
-    /*private void showDialogOK(String message, DialogInterface.OnClickListener okListener) {
-        new AlertDialog.Builder(this)
-                .setMessage(message)
-                //.setTitle(message)
-                .setPositiveButton(getResources().getString(R.string.dialog_confirm), okListener)
-                .setNegativeButton(getResources().getString(R.string.dialog_cancel), okListener)
-                .create()
-                .show();
-    }*/
+    @Override
+    public void onEnterAmbient(Bundle ambientDetails) {
+        super.onEnterAmbient(ambientDetails);
+        //updateDisplay();
+    }
 
-    protected void showResetlog() {
+    @Override
+    public void onUpdateAmbient() {
+        super.onUpdateAmbient();
+        //updateDisplay();
+    }
 
-        final View promptView = View.inflate(TiebreakActivity.this, R.layout.dialog_layout, null);
-
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(TiebreakActivity.this);
-        alertDialogBuilder.setView(promptView);
-
-        final TextView title = (TextView) promptView.findViewById(R.id.txtTitle);
-        //final TextView msg = (TextView) promptView.findViewById(R.id.txtMsg);
-        //final Button cancel = (Button) promptView.findViewById(R.id.dialog_cancel);
-        //final Button confirm = (Button) promptView.findViewById(R.id.dialog_confirm);
-
-
-
-        title.setTextColor(Color.BLACK);
-        title.setText(getResources().getString(R.string.select_rule)+"\n"+myList.get(selected));
-
-        //msg.setTextColor(Color.BLACK);
-        //msg.setText(myList.get(selected).toString());
-        //alertDialogBuilder.setTitle(getResources().getString(R.string.game_reset));
-        //alertDialogBuilder.setMessage(getResources().getString(R.string.game_reset));
-        //final ImageView imgYes = (ImageView) promptView.findViewById(R.id.imgYes);
-        //final ImageView imgNo = (ImageView) promptView.findViewById(R.id.imgYes);
-
-        // setup a dialog window
-        alertDialogBuilder.setCancelable(false);
-        alertDialogBuilder.setPositiveButton(getResources().getString(R.string.dialog_confirm), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                Intent intent = new Intent(TiebreakActivity.this, DeuceActivity.class);
-                intent.putExtra("SETUP_SET", sets);
-                intent.putExtra("SETUP_TIEBREAK",  String.valueOf(selected));
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                //finish();
-            }
-        });
-        alertDialogBuilder.setNegativeButton(getResources().getString(R.string.dialog_cancel), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-
-            }
-        });
-        ad = alertDialogBuilder.show();
+    @Override
+    public void onExitAmbient() {
+        //updateDisplay();
+        super.onExitAmbient();
     }
 }
