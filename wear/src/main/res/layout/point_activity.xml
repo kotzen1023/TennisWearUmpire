@@ -30,16 +30,42 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:layout_weight="1"
+                    android:orientation="horizontal"
                     android:id="@+id/layoutPointPFBack"
-                    android:visibility="gone">
+                    android:visibility="visible">
 
-                    <ImageView
-                        android:src="@drawable/ic_undo_black_48dp"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:id="@+id/imageViewPointPFBack"
-                        android:layout_gravity="center_horizontal"
-                        />
+                        android:layout_weight="1"
+                        android:id="@+id/layoutBtnBack">
+
+                        <ImageView
+                            android:src="@drawable/ic_undo_black_48dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:id="@+id/imageViewPointPFBack"
+                            android:layout_gravity="center_horizontal"
+                            />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:id="@+id/layoutBtnVoice"
+                        android:visibility="invisible">
+
+                        <ImageView
+                            android:src="@drawable/ic_keyboard_voice_black_48dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:id="@+id/imageViewPointVoice"
+                            android:layout_gravity="center_horizontal"
+                            />
+                    </LinearLayout>
+
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -48,7 +74,7 @@
                     android:orientation="horizontal"
                     android:gravity="center"
                     android:layout_weight="1"
-                    android:visibility="visible"
+                    android:visibility="gone"
                     android:id="@+id/layoutPointStepCount">
 
                     <RelativeLayout

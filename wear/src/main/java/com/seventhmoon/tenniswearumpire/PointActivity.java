@@ -68,6 +68,9 @@ public class PointActivity extends WearableActivity {
     private TextView btnGames;
 
     private LinearLayout layoutFBack;
+    private LinearLayout layoutBtnBack;
+    private LinearLayout layoutBtnVoice;
+    private ImageView imageViewPointVoice;
     private LinearLayout layoutPointStepCount;
     private TextView stepCountPoint;
 
@@ -146,6 +149,9 @@ public class PointActivity extends WearableActivity {
         pointContainer = (BoxInsetLayout) findViewById(R.id.pointContainer);
 
         layoutFBack = (LinearLayout) findViewById(R.id.layoutPointPFBack);
+        layoutBtnBack = findViewById(R.id.layoutBtnBack);
+        layoutBtnVoice = findViewById(R.id.layoutBtnVoice);
+        imageViewPointVoice = findViewById(R.id.imageViewPointVoice);
         layoutPointStepCount = (LinearLayout) findViewById(R.id.layoutPointStepCount);
         stepCountPoint = (TextView) findViewById(R.id.stepCountPoint);
 
@@ -239,7 +245,22 @@ public class PointActivity extends WearableActivity {
 
         step_count_start = 0;
 
-        layoutFBack.setOnClickListener(new View.OnClickListener() {
+        layoutBtnVoice.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                /*if (voiceOn) {
+                    voiceOn = false;
+                    imageViewPointVoice.setImageResource(R.drawable.ic_keyboard_voice_black_off_48dp);
+                    toast("Voice Off");
+                } else {
+                    voiceOn = true;
+                    imageViewPointVoice.setImageResource(R.drawable.ic_keyboard_voice_black_48dp);
+                    toast("Voice On");
+                }*/
+            }
+        });
+
+        layoutBtnBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (stack.isEmpty()) {
