@@ -67,7 +67,7 @@ public class MainActivity extends WearableActivity {
 
         SensorManager mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
-        Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        /*Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (mAccelerometer != null) {
             Log.e(TAG, "Has mAccelerometer sensor!");
         }
@@ -95,7 +95,7 @@ public class MainActivity extends WearableActivity {
         Sensor mRotationVector = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         if (mRotationVector != null) {
             Log.e(TAG, "Has rotation vector sensor!");
-        }
+        }*/
 
         Sensor mStepCounter = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         if (mStepCounter != null) {
