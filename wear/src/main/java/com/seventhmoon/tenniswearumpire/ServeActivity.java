@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 //import android.support.wearable.view.WearableRecyclerView;
+import android.support.wearable.view.BoxInsetLayout;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -23,7 +24,7 @@ public class ServeActivity extends WearableActivity {
 
     Context context;
 
-    //WearableRecyclerView wearableRecyclerView;
+    private BoxInsetLayout mContainerView;
 
     WheelPicker wheelPicker;
 
@@ -61,7 +62,7 @@ public class ServeActivity extends WearableActivity {
         Log.d(TAG, "Get tiebreak = "+tiebreak);
         Log.d(TAG, "Get deuce = "+deuce);
 
-
+        mContainerView = findViewById(R.id.serve_container);
         wheelPicker = (WheelPicker) findViewById(R.id.wheel_picker_deuce);
 
         //wheelPicker.setCyclic(true);
@@ -150,18 +151,30 @@ public class ServeActivity extends WearableActivity {
     @Override
     public void onEnterAmbient(Bundle ambientDetails) {
         super.onEnterAmbient(ambientDetails);
-        //updateDisplay();
+        updateDisplay();
     }
 
     @Override
     public void onUpdateAmbient() {
         super.onUpdateAmbient();
-        //updateDisplay();
+        updateDisplay();
     }
 
     @Override
     public void onExitAmbient() {
-        //updateDisplay();
+        updateDisplay();
         super.onExitAmbient();
+    }
+
+    private void updateDisplay() {
+        if (isAmbient()) {
+            mContainerView.setBackgroundColor(Color.BLACK);
+            wheelPicker.setItemTextColor(Color.WHITE);
+            wheelPicker.setIndicatorColor(Color.WHITE);
+        } else {
+            mContainerView.setBackground(null);
+            wheelPicker.setItemTextColor(Color.GRAY);
+            wheelPicker.setIndicatorColor(Color.GRAY);
+        }
     }
 }

@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -17,6 +18,7 @@ import android.text.Layout;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -68,8 +70,8 @@ public class PointActivity extends WearableActivity {
     private TextView btnGames;
 
     private LinearLayout layoutFBack;
-    private LinearLayout layoutBtnBack;
-    private LinearLayout layoutBtnVoice;
+    private FrameLayout layoutBtnBack;
+    private FrameLayout layoutBtnVoice;
     private ImageView imageViewPointVoice;
     private LinearLayout layoutPointStepCount;
     private TextView stepCountPoint;
@@ -120,17 +122,26 @@ public class PointActivity extends WearableActivity {
     private static BroadcastReceiver mReceiver = null;
     private static boolean isRegister = false;
 
+    static SharedPreferences pref ;
+    static SharedPreferences.Editor editor;
+    private static final String FILE_NAME = "Preference";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Log.d(TAG, "onCreate");
 
+        context = getBaseContext();
+
         setContentView(R.layout.point_activity);
 
         setAmbientEnabled();
 
-        context = getBaseContext();
+        pref = getSharedPreferences(FILE_NAME, MODE_PRIVATE);
+        voiceOn = pref.getBoolean("VOICE_ON", false);
+
+
 
         Intent intent = getIntent();
 
@@ -169,6 +180,12 @@ public class PointActivity extends WearableActivity {
 
         layoutBtn = (LinearLayout) findViewById(R.id.layoutBtn);
         textViewTime = (TextView) findViewById(R.id.textViewpointTime);
+
+        if (voiceOn) {
+            imageViewPointVoice.setImageResource(R.drawable.ic_keyboard_voice_black_48dp);
+        } else {
+            imageViewPointVoice.setImageResource(R.drawable.ic_keyboard_voice_black_off_48dp);
+        }
 
         loadState();
 
@@ -251,12 +268,16 @@ public class PointActivity extends WearableActivity {
                 /*if (voiceOn) {
                     voiceOn = false;
                     imageViewPointVoice.setImageResource(R.drawable.ic_keyboard_voice_black_off_48dp);
-                    toast("Voice Off");
+                    toast(context.getResources().getString(R.string.voice_off));
                 } else {
                     voiceOn = true;
                     imageViewPointVoice.setImageResource(R.drawable.ic_keyboard_voice_black_48dp);
-                    toast("Voice On");
-                }*/
+                    toast(context.getResources().getString(R.string.voice_on));
+                }
+
+                editor = pref.edit();
+                editor.putBoolean("VOICE_ON", voiceOn);
+                editor.apply();*/
             }
         });
 

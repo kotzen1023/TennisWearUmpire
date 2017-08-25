@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 //import android.support.wearable.view.WearableRecyclerView;
+import android.support.wearable.view.BoxInsetLayout;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -23,7 +24,7 @@ public class DeuceActivity extends WearableActivity {
 
     Context context;
 
-    //WearableRecyclerView wearableRecyclerView;
+    private BoxInsetLayout mContainerView;
 
     WheelPicker wheelPicker;
 
@@ -56,7 +57,7 @@ public class DeuceActivity extends WearableActivity {
         Log.d(TAG, "Get games = "+games);
         Log.d(TAG, "Get tiebreak = "+tiebreak);
 
-
+        mContainerView = findViewById(R.id.deuce_container);
         wheelPicker = (WheelPicker) findViewById(R.id.wheel_picker_deuce);
 
         //wheelPicker.setCyclic(true);
@@ -144,18 +145,36 @@ public class DeuceActivity extends WearableActivity {
     @Override
     public void onEnterAmbient(Bundle ambientDetails) {
         super.onEnterAmbient(ambientDetails);
-        //updateDisplay();
+        updateDisplay();
     }
 
     @Override
     public void onUpdateAmbient() {
         super.onUpdateAmbient();
-        //updateDisplay();
+        updateDisplay();
     }
 
     @Override
     public void onExitAmbient() {
-        //updateDisplay();
+        updateDisplay();
         super.onExitAmbient();
+    }
+
+    private void updateDisplay() {
+        if (isAmbient()) {
+            mContainerView.setBackgroundColor(Color.BLACK);
+            wheelPicker.setItemTextColor(Color.WHITE);
+            wheelPicker.setIndicatorColor(Color.WHITE);
+            //mTextView.setTextColor(getResources().getColor(android.R.color.white));
+            //mClockView.setVisibility(View.VISIBLE);
+
+            //mClockView.setText(AMBIENT_DATE_FORMAT.format(new Date()));
+        } else {
+            mContainerView.setBackground(null);
+            wheelPicker.setItemTextColor(Color.GRAY);
+            wheelPicker.setIndicatorColor(Color.GRAY);
+            //mTextView.setTextColor(getResources().getColor(android.R.color.black));
+            //mClockView.setVisibility(View.GONE);
+        }
     }
 }

@@ -35,6 +35,7 @@ public class GameActivity extends WearableActivity {
     private BoxInsetLayout gameContainer;
 
     LinearLayout layoutBtn;
+    LinearLayout layoutVoiceSupport;
 
     TextView headOppt;
     TextView headYou;
@@ -80,6 +81,8 @@ public class GameActivity extends WearableActivity {
         stepCounter = (TextView) findViewById(R.id.stepCountGames);
 
         layoutBtn = (LinearLayout) findViewById(R.id.layoutBtnGame);
+
+        layoutVoiceSupport = findViewById(R.id.layoutVoiceSupport);
 
         textViewTime = (TextView) findViewById(R.id.textViewGameTime);
 
@@ -147,6 +150,14 @@ public class GameActivity extends WearableActivity {
             isRegister = true;
             Log.d(TAG, "registerReceiver mReceiver");
         }
+
+        layoutVoiceSupport.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Intent intent = new Intent(GameActivity.this, VoiceSelectActivity.class);
+                //startActivity(intent);
+            }
+        });
     }
 
     @Override

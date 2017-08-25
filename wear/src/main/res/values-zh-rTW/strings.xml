@@ -48,4 +48,10 @@
     <string name="main_oppt">對手</string>
     <string name="point_game_is_finish">比賽已結束</string>
     <string name="select_games">選擇局數:</string>
+    <string name="voice_support">語音</string>
+    <string name="voice_support_gbr_man">語音 英國 (男)\n(免費)</string>
+    <string name="voice_support_gbr_woman">語音 英國 (女)</string>
+    <string name="voice_support_buy">購買</string>
+    <string name="voice_on">語音 開啟</string>
+    <string name="voice_off">語音 關閉</string>
 </resources>

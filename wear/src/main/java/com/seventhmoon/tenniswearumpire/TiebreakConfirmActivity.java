@@ -2,8 +2,10 @@ package com.seventhmoon.tenniswearumpire;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
+import android.support.wearable.view.BoxInsetLayout;
 import android.support.wearable.view.CircledImageView;
 import android.util.Log;
 import android.view.View;
@@ -15,6 +17,7 @@ public class TiebreakConfirmActivity extends WearableActivity {
 
     Context context;
     private TextView txtTitle;
+    private BoxInsetLayout mContainerView;
     private CircledImageView btnCancel;
     private CircledImageView btnOk;
 
@@ -37,6 +40,7 @@ public class TiebreakConfirmActivity extends WearableActivity {
         Log.e(TAG, "setup_games = "+setup_games);
         Log.e(TAG, "setup_tiebreak = "+setup_tiebreak);
 
+        mContainerView = findViewById(R.id.container);
         txtTitle = (TextView) findViewById(R.id.txtTitle);
         btnCancel = (CircledImageView) findViewById(R.id.btn_cancel);
         btnOk = (CircledImageView) findViewById(R.id.btn_ok);
@@ -108,18 +112,30 @@ public class TiebreakConfirmActivity extends WearableActivity {
     @Override
     public void onEnterAmbient(Bundle ambientDetails) {
         super.onEnterAmbient(ambientDetails);
-        //updateDisplay();
+        updateDisplay();
     }
 
     @Override
     public void onUpdateAmbient() {
         super.onUpdateAmbient();
-        //updateDisplay();
+        updateDisplay();
     }
 
     @Override
     public void onExitAmbient() {
-        //updateDisplay();
+        updateDisplay();
         super.onExitAmbient();
+    }
+
+    private void updateDisplay() {
+        if (isAmbient()) {
+            mContainerView.setBackgroundColor(Color.BLACK);
+            txtTitle.setTextColor(Color.WHITE);
+
+        } else {
+            mContainerView.setBackground(null);
+            txtTitle.setTextColor(Color.BLACK);
+
+        }
     }
 }

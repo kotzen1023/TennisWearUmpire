@@ -172,32 +172,34 @@ public class SetsActivity extends WearableActivity {
     @Override
     public void onEnterAmbient(Bundle ambientDetails) {
         super.onEnterAmbient(ambientDetails);
-        //updateDisplay();
+        updateDisplay();
     }
 
     @Override
     public void onUpdateAmbient() {
         super.onUpdateAmbient();
-        //updateDisplay();
+        updateDisplay();
     }
 
     @Override
     public void onExitAmbient() {
-        //updateDisplay();
+        updateDisplay();
         super.onExitAmbient();
     }
 
     private void updateDisplay() {
         if (isAmbient()) {
-            mContainerView.setBackgroundColor(getResources().getColor(android.R.color.black));
+            mContainerView.setBackgroundColor(Color.BLACK);
             wheelPicker.setItemTextColor(Color.WHITE);
+            wheelPicker.setIndicatorColor(Color.WHITE);
             //mTextView.setTextColor(getResources().getColor(android.R.color.white));
             //mClockView.setVisibility(View.VISIBLE);
 
             //mClockView.setText(AMBIENT_DATE_FORMAT.format(new Date()));
         } else {
             mContainerView.setBackground(null);
-            wheelPicker.setItemTextColor(Color.BLACK);
+            wheelPicker.setItemTextColor(Color.GRAY);
+            wheelPicker.setIndicatorColor(Color.GRAY);
             //mTextView.setTextColor(getResources().getColor(android.R.color.black));
             //mClockView.setVisibility(View.GONE);
         }
