@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">網球裁判Watch</string>
+    <string name="app_name">網球Watch Out</string>
     <string name="setup_one_set">1 盤</string>
     <string name="setup_three_sets">3 盤</string>
     <string name="setup_five_sets">5 盤</string>
