@@ -54,7 +54,7 @@
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:id="@+id/layoutBtnVoice"
-                        android:visibility="invisible">
+                        android:visibility="visible">
 
                         <ImageView
                             android:src="@drawable/ic_keyboard_voice_black_48dp"
