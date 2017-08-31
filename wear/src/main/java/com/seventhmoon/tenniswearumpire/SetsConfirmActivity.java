@@ -38,9 +38,9 @@ public class SetsConfirmActivity extends WearableActivity {
 
         mContainerView = findViewById(R.id.container);
 
-        txtTitle = (TextView) findViewById(R.id.txtTitle);
-        btnCancel = (CircledImageView) findViewById(R.id.btn_cancel);
-        btnOk = (CircledImageView) findViewById(R.id.btn_ok);
+        txtTitle = findViewById(R.id.txtTitle);
+        btnCancel = findViewById(R.id.btn_cancel);
+        btnOk = findViewById(R.id.btn_ok);
 
         String selected_set;
         switch (setup_set) {

@@ -2,19 +2,18 @@ package com.seventhmoon.tenniswearumpire;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
+
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
-//import android.support.wearable.view.WearableRecyclerView;
+
 import android.support.wearable.view.BoxInsetLayout;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
+
 
 import com.aigestudio.wheelpicker.WheelPicker;
-//import com.seventhmoon.tenniswearboard.Data.SettingAdapter;
+
 
 import java.util.ArrayList;
 
@@ -56,7 +55,7 @@ public class TiebreakActivity extends WearableActivity {
         Log.d(TAG, "Get games = "+games);
 
 
-        wheelPicker = (WheelPicker) findViewById(R.id.wheel_picker_tiebreak);
+        wheelPicker = findViewById(R.id.wheel_picker_tiebreak);
 
         //wheelPicker.setCyclic(true);
         wheelPicker.setIndicator(true);

@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 
 
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.wearable.activity.WearableActivity;
@@ -22,7 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-import com.seventhmoon.tenniswearumpire.Data.InitData;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -247,7 +248,7 @@ public class MainActivity extends WearableActivity {
     }
 
     public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+                                           @NonNull String permissions[], @NonNull int[] grantResults) {
         //Log.e(TAG, "result size = "+grantResults.length+ "result[0] = "+grantResults[0]+", result[1] = "+grantResults[1]);
 
 
@@ -394,7 +395,7 @@ public class MainActivity extends WearableActivity {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
         alertDialogBuilder.setView(promptView);
 
-        final TextView title = (TextView) promptView.findViewById(R.id.txtTitle);
+        final TextView title = promptView.findViewById(R.id.txtTitle);
         title.setTextColor(Color.BLACK);
         title.setText(getResources().getString(R.string.permission_descript));
         //alertDialogBuilder.setTitle(getResources().getString(R.string.game_reset));

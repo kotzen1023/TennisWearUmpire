@@ -15,8 +15,6 @@ import com.seventhmoon.tenniswearumpire.Data.ListenChooseItem;
 import java.util.ArrayList;
 import java.util.Random;
 
-import static com.seventhmoon.tenniswearumpire.PointActivity.step_count_end;
-import static com.seventhmoon.tenniswearumpire.PointActivity.step_count_start;
 import static com.seventhmoon.tenniswearumpire.PointActivity.voicePlay;
 
 
@@ -24,10 +22,10 @@ public class VoiceListenActivity extends WearableActivity {
     private static final String TAG = VoiceListenActivity.class.getName();
 
     public ArrayList<ListenChooseItem> listenList = new ArrayList<>();
-    private ListenChooseArrayAdapter listenChooseArrayAdapter;
-    private ListView listView;
+    //private ListenChooseArrayAdapter listenChooseArrayAdapter;
+    //private ListView listView;
 
-    private Context context;
+    //private Context context;
 
     private VoicePlay listenPlay;
 
@@ -38,13 +36,13 @@ public class VoiceListenActivity extends WearableActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        context = getBaseContext();
+        Context context = getBaseContext();
 
         setAmbientEnabled();
 
         setContentView(R.layout.voice_listen);
 
-        listView = findViewById(R.id.voiceListenListView);
+        ListView listView = findViewById(R.id.voiceListenListView);
 
 
         if (voicePlay == null) {
@@ -63,7 +61,7 @@ public class VoiceListenActivity extends WearableActivity {
         ListenChooseItem item1 = new ListenChooseItem("GBR Woman");
         listenList.add(item1);
 
-        listenChooseArrayAdapter = new ListenChooseArrayAdapter(VoiceListenActivity.this, R.layout.voice_listen_choose_item, listenList);
+        ListenChooseArrayAdapter listenChooseArrayAdapter = new ListenChooseArrayAdapter(VoiceListenActivity.this, R.layout.voice_listen_choose_item, listenList);
         listView.setAdapter(listenChooseArrayAdapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

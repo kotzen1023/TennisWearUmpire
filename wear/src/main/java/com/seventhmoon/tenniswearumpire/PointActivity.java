@@ -924,7 +924,9 @@ public class PointActivity extends WearableActivity {
 
             Log.d(TAG, "########## new state end ##########");
 
+            checkPoint(new_state);
 
+            checkGames(new_state);
 
             //push into stack
             stack.push(new_state);

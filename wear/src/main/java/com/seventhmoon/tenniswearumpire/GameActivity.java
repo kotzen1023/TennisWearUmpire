@@ -74,19 +74,19 @@ public class GameActivity extends WearableActivity {
 
         context = getBaseContext();
 
-        gameContainer = (BoxInsetLayout) findViewById(R.id.gameContainer);
+        gameContainer = findViewById(R.id.gameContainer);
 
-        imgStepCount = (ImageView) findViewById(R.id.imgStepCount);
+        imgStepCount = findViewById(R.id.imgStepCount);
 
-        stepCounter = (TextView) findViewById(R.id.stepCountGames);
+        stepCounter = findViewById(R.id.stepCountGames);
 
-        layoutBtn = (LinearLayout) findViewById(R.id.layoutBtnGame);
+        layoutBtn = findViewById(R.id.layoutBtnGame);
 
         layoutVoiceSupport = findViewById(R.id.layoutVoiceSupport);
 
-        textViewTime = (TextView) findViewById(R.id.textViewGameTime);
+        textViewTime = findViewById(R.id.textViewGameTime);
 
-        TextView btnPoint = (TextView) findViewById(R.id.textViewGamesPoints);
+        TextView btnPoint = findViewById(R.id.textViewGamesPoints);
         btnPoint.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -94,22 +94,22 @@ public class GameActivity extends WearableActivity {
             }
         });
 
-        headOppt = (TextView) findViewById(R.id.gameOppt);
-        headYou = (TextView) findViewById(R.id.gameYou);
+        headOppt = findViewById(R.id.gameOppt);
+        headYou = findViewById(R.id.gameYou);
 
-        imgWinCheckUp = (ImageView) findViewById(R.id.winCheckUp);
-        imgWinCheckDown = (ImageView) findViewById(R.id.winCheckDown);
+        imgWinCheckUp = findViewById(R.id.winCheckUp);
+        imgWinCheckDown = findViewById(R.id.winCheckDown);
 
-        textViewSet1Up = (TextView) findViewById(R.id.set1_up);
-        textViewSet1Down = (TextView) findViewById(R.id.set1_down);
-        textViewSet2Up = (TextView) findViewById(R.id.set2_up);
-        textViewSet2Down = (TextView) findViewById(R.id.set2_down);
-        textViewSet3Up = (TextView) findViewById(R.id.set3_up);
-        textViewSet3Down = (TextView) findViewById(R.id.set3_down);
-        textViewSet4Up = (TextView) findViewById(R.id.set4_up);
-        textViewSet4Down = (TextView) findViewById(R.id.set4_down);
-        textViewSet5Up = (TextView) findViewById(R.id.set5_up);
-        textViewSet5Down = (TextView) findViewById(R.id.set5_down);
+        textViewSet1Up = findViewById(R.id.set1_up);
+        textViewSet1Down = findViewById(R.id.set1_down);
+        textViewSet2Up = findViewById(R.id.set2_up);
+        textViewSet2Down = findViewById(R.id.set2_down);
+        textViewSet3Up = findViewById(R.id.set3_up);
+        textViewSet3Down = findViewById(R.id.set3_down);
+        textViewSet4Up = findViewById(R.id.set4_up);
+        textViewSet4Down = findViewById(R.id.set4_down);
+        textViewSet5Up = findViewById(R.id.set5_up);
+        textViewSet5Down = findViewById(R.id.set5_down);
 
         imgWinCheckUp.setVisibility(View.INVISIBLE);
         imgWinCheckDown.setVisibility(View.INVISIBLE);

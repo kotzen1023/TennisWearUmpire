@@ -7,19 +7,16 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 import android.support.wearable.view.BoxInsetLayout;
-import android.support.wearable.view.CircledImageView;
+
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
+
 
 import com.aigestudio.wheelpicker.WheelPicker;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.wearable.Wearable;
+
 
 import java.util.ArrayList;
 
-//import static com.seventhmoon.tenniswearboard.Data.InitData.mGoogleApiClient;
+
 
 
 public class GamesInSetActivity extends WearableActivity {
@@ -55,7 +52,7 @@ public class GamesInSetActivity extends WearableActivity {
         Log.d(TAG, "Get set = "+sets);
 
         mContainerView = findViewById(R.id.game_container);
-        wheelPicker = (WheelPicker) findViewById(R.id.wheel_picker_games_in_set);
+        wheelPicker = findViewById(R.id.wheel_picker_games_in_set);
 
         //wheelPicker.setCyclic(true);
         wheelPicker.setIndicator(true);

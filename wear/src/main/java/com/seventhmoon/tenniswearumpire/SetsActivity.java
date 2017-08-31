@@ -10,10 +10,9 @@ import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 
 import android.support.wearable.view.BoxInsetLayout;
-import android.support.wearable.view.CircledImageView;
+
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
+
 
 import com.aigestudio.wheelpicker.WheelPicker;
 import com.google.android.gms.common.ConnectionResult;
@@ -23,9 +22,9 @@ import com.seventhmoon.tenniswearumpire.Data.InitData;
 
 
 import java.util.ArrayList;
-import java.util.Date;
 
-//import static com.seventhmoon.tenniswearboard.Data.InitData.mGoogleApiClient;
+
+
 
 
 
@@ -56,7 +55,7 @@ public class SetsActivity extends WearableActivity {
 
         setAmbientEnabled();
 
-        mContainerView = (BoxInsetLayout) findViewById(R.id.set_container);
+        mContainerView = findViewById(R.id.set_container);
         //mTextView = (TextView) findViewById(R.id.text);
         //mClockView = (TextView) findViewById(R.id.clock);
 
@@ -88,7 +87,7 @@ public class SetsActivity extends WearableActivity {
 
 
 
-        wheelPicker = (WheelPicker) findViewById(R.id.wheel_picker_sets);
+        wheelPicker = findViewById(R.id.wheel_picker_sets);
 
         //wheelPicker.setCyclic(true);
         wheelPicker.setIndicator(true);

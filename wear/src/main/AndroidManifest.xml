@@ -42,7 +42,6 @@
         <activity android:name=".DeuceConfirmActivity"/>
         <activity android:name=".ServeActivity"/>
         <activity android:name=".ServeConfirmActivity"/>
-        <activity android:name=".MainMenu"/>
         <activity android:name=".PointActivity"/>
         <activity android:name=".GameActivity"/>
         <activity android:name=".VoiceSelectActivity"/>

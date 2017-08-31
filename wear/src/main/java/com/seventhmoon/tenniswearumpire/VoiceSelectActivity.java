@@ -13,14 +13,14 @@ import android.support.wearable.activity.WearableActivity;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
+
 import android.widget.AdapterView;
 
 import android.widget.ImageView;
 import android.widget.ListView;
 
 import com.seventhmoon.tenniswearumpire.Data.ImageBuyItem;
-import com.seventhmoon.tenniswearumpire.Data.RandomString;
+//import com.seventhmoon.tenniswearumpire.Data.RandomString;
 import com.seventhmoon.tenniswearumpire.Data.ImageBuyItemArrayAdapter;
 import com.seventhmoon.tenniswearumpire.util.IabBroadcastReceiver;
 import com.seventhmoon.tenniswearumpire.util.IabHelper;
@@ -38,8 +38,8 @@ public class VoiceSelectActivity extends WearableActivity implements IabBroadcas
 
     public ArrayList<ImageBuyItem> imageBuyItems = new ArrayList<>();
     Context context;
-    private ImageView imageViewBack;
-    private ImageView imageViewListen;
+    //private ImageView imageViewBack;
+    //private ImageView imageViewListen;
 
     private ImageBuyItemArrayAdapter imageBuyItemArrayAdapter;
     private ListView listView;
@@ -74,8 +74,8 @@ public class VoiceSelectActivity extends WearableActivity implements IabBroadcas
 
 
         setContentView(R.layout.voice_select_activity);
-        imageViewBack = findViewById(R.id.imageViewBack);
-        imageViewListen = findViewById(R.id.imageViewListen);
+        ImageView imageViewBack = findViewById(R.id.imageViewBack);
+        ImageView imageViewListen = findViewById(R.id.imageViewListen);
 
         imageViewBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -395,36 +395,40 @@ public class VoiceSelectActivity extends WearableActivity implements IabBroadcas
             //gbr woman
             if (inventory != null) {
                 imageBuyItems.get(1).setPurchase(inventory.getPurchase("sku_voice_support_gbr_woman"));
-            }
 
-            if (inventory.getPurchase("sku_voice_support_gbr_woman") != null) {
-
-
-                Log.i(TAG, "sku_voice_support_gbr_woman = " + inventory.getSkuDetails("sku_voice_support_gbr_woman").getPriceCurrencyCode() + " " +
-                        inventory.getSkuDetails("sku_voice_support_gbr_woman").getPrice() + "purchase " + inventory.getPurchase("sku_voice_support_gbr_woman"));
+                if (inventory.getPurchase("sku_voice_support_gbr_woman") != null) {
 
 
-                if (inventory.getPurchase("sku_voice_support_gbr_woman") == null) { //not buy yet
+                    Log.i(TAG, "sku_voice_support_gbr_woman = " + inventory.getSkuDetails("sku_voice_support_gbr_woman").getPriceCurrencyCode() + " " +
+                            inventory.getSkuDetails("sku_voice_support_gbr_woman").getPrice() + "purchase " + inventory.getPurchase("sku_voice_support_gbr_woman"));
+
+
+                    if (inventory.getPurchase("sku_voice_support_gbr_woman") == null) { //not buy yet
+                        if (debug)
+                            imageBuyItems.get(1).setTitle(getResources().getString(R.string.voice_support_gbr_woman));
+                        else
+                            imageBuyItems.get(1).setTitle(getResources().getString(R.string.voice_support_gbr_woman)+"\n" + inventory.getSkuDetails("sku_voice_support_gbr_woman").getPrice());
+                        imageBuyItems.get(1).setPurchased(false);
+                    } else {
+                        if (debug)
+                            imageBuyItems.get(1).setTitle(getResources().getString(R.string.voice_support_gbr_woman));
+                        else
+                            imageBuyItems.get(1).setTitle(getResources().getString(R.string.voice_support_gbr_woman)+"\n" + "Purchased");
+                        imageBuyItems.get(1).setPurchased(true);
+                    }
+                } else {
+                    Log.e(TAG, "inventory.getPurchase = null");
                     if (debug)
                         imageBuyItems.get(1).setTitle(getResources().getString(R.string.voice_support_gbr_woman));
                     else
                         imageBuyItems.get(1).setTitle(getResources().getString(R.string.voice_support_gbr_woman)+"\n" + inventory.getSkuDetails("sku_voice_support_gbr_woman").getPrice());
                     imageBuyItems.get(1).setPurchased(false);
-                } else {
-                    if (debug)
-                        imageBuyItems.get(1).setTitle(getResources().getString(R.string.voice_support_gbr_woman));
-                    else
-                        imageBuyItems.get(1).setTitle(getResources().getString(R.string.voice_support_gbr_woman)+"\n" + "Purchased");
-                    imageBuyItems.get(1).setPurchased(true);
                 }
             } else {
-                Log.e(TAG, "inventory.getPurchase = null");
-                if (debug)
-                    imageBuyItems.get(1).setTitle(getResources().getString(R.string.voice_support_gbr_woman));
-                else
-                    imageBuyItems.get(1).setTitle(getResources().getString(R.string.voice_support_gbr_woman)+"\n" + inventory.getSkuDetails("sku_voice_support_gbr_woman").getPrice());
-                imageBuyItems.get(1).setPurchased(false);
+                Log.e(TAG, "inventory == null");
             }
+
+
 
             //user record
             /*if (inventory != null) {
@@ -520,6 +524,7 @@ public class VoiceSelectActivity extends WearableActivity implements IabBroadcas
                         Log.d(TAG, "buy Consume "+purchase.getSku()+" success!");
                     } else {
                         // handle error
+                        Log.e(TAG, "handle error");
                     }
                 }
             };
@@ -533,6 +538,7 @@ public class VoiceSelectActivity extends WearableActivity implements IabBroadcas
 
             if (result.isFailure()) {
                 // Handle failure
+                Log.e(TAG, "handle error");
             } else {
                 mHelper.consumeAsync(inventory.getPurchase("sku_voice_support_gbr_woman"),
                         mConsumeFinishedListener);
@@ -542,7 +548,7 @@ public class VoiceSelectActivity extends WearableActivity implements IabBroadcas
 
     protected void do_buy_theme(int position)
     {
-        RandomString randomString = new RandomString(36);
+        //RandomString randomString = new RandomString(36);
         //Purchase purchase = imageBuyItems.get(0).getPurchase();
         switch (position)
         {
