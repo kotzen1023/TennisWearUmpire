@@ -33,19 +33,11 @@
         </activity>
 
         <activity android:name=".SetsActivity"/>
-        <activity android:name=".SetsConfirmActivity"/>
-        <activity android:name=".GamesInSetActivity"/>
-        <activity android:name=".GamesInSetComfirmActivity"/>
-        <activity android:name=".TiebreakActivity"/>
-        <activity android:name=".TiebreakConfirmActivity"/>
-        <activity android:name=".DeuceActivity"/>
-        <activity android:name=".DeuceConfirmActivity"/>
-        <activity android:name=".ServeActivity"/>
-        <activity android:name=".ServeConfirmActivity"/>
         <activity android:name=".PointActivity"/>
         <activity android:name=".GameActivity"/>
         <activity android:name=".VoiceSelectActivity"/>
         <activity android:name=".VoiceListenActivity"/>
+        <activity android:name=".DialogActivity"/>
 
         <service android:name=".Service.DataLayerListenerService">
             <intent-filter>

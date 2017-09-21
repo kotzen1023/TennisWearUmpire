@@ -12,12 +12,13 @@ import android.view.View;
 import android.widget.TextView;
 
 
-public class TiebreakConfirmActivity extends WearableActivity {
-    private static final String TAG = TiebreakConfirmActivity.class.getName();
+public class DialogActivity extends WearableActivity {
+    private static final String TAG = DialogActivity.class.getName();
 
     Context context;
     private TextView txtTitle;
     private BoxInsetLayout mContainerView;
+
     private CircledImageView btnCancel;
     private CircledImageView btnOk;
 
@@ -25,61 +26,52 @@ public class TiebreakConfirmActivity extends WearableActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.d(TAG, "onCreate");
-
         setAmbientEnabled();
 
+        Log.d(TAG, "onCreate");
+
         setContentView(R.layout.dialog_layout);
+
         context = getBaseContext();
-        final String setup_set = getIntent().getStringExtra("SETUP_SET");
-        final String setup_games = getIntent().getStringExtra("SETUP_GAMES");
-        final String setup_tiebreak = getIntent().getStringExtra("SETUP_TIEBREAK");
+
+        Bundle extras = getIntent().getExtras();
 
 
-        Log.e(TAG, "setup_set = "+setup_set);
-        Log.e(TAG, "setup_games = "+setup_games);
-        Log.e(TAG, "setup_tiebreak = "+setup_tiebreak);
+        mContainerView = findViewById(R.id.dialog_container);
 
-        mContainerView = findViewById(R.id.container);
         txtTitle = findViewById(R.id.txtTitle);
         btnCancel = findViewById(R.id.btn_cancel);
         btnOk = findViewById(R.id.btn_ok);
 
 
-        String selected_tiebreak;
-        switch (setup_tiebreak) {
-            case "0":
-                selected_tiebreak = getResources().getString(R.string.setup_tiebreak);
-                break;
-            case "1":
-                selected_tiebreak = getResources().getString(R.string.setup_deciding_game);
-                break;
-            default:
-                selected_tiebreak = getResources().getString(R.string.setup_tiebreak);
-                break;
 
-        }
-
-        txtTitle.setText(getResources().getString(R.string.select_rule)+"\n"+selected_tiebreak);
+        txtTitle.setText(getResources().getString(R.string.select_title, extras.getString("TITLE")));
 
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Intent intent = new Intent();
+                setResult(RESULT_CANCELED, intent);
                 finish();
             }
         });
 
+
+
         btnOk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(TiebreakConfirmActivity.this, DeuceActivity.class);
-                intent.putExtra("SETUP_SET", setup_set);
-                intent.putExtra("SETUP_GAMES", setup_games);
-                intent.putExtra("SETUP_TIEBREAK", setup_tiebreak);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
+                //for(int i=0; i<deleteList.size(); i++) {
+                //    Log.e(TAG, "delete "+deleteList.get(i));
+                //}
+
+                //Bundle bundle = new Bundle();
+                //bundle.putString("phonenumber", phoneNumber.getText().toString());
+                Intent intent = new Intent();
+                setResult(RESULT_OK, intent);
                 finish();
+
+
             }
         });
 

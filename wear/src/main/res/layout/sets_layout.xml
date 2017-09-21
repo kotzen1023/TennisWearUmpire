@@ -12,19 +12,91 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         app:layout_box="all">
 
-        <com.aigestudio.wheelpicker.WheelPicker
-            xmlns:android="http://schemas.android.com/apk/res/android"
+        <FrameLayout
+            android:layout_width="84dp"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:padding="1dp"
+            android:id="@+id/frameLayoutbBack"
+            android:visibility="gone">
+
+            <android.support.wearable.view.CircledImageView
+                android:id="@+id/btnFileChooseListDelete"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal"
+                android:src="@drawable/ic_undo_black_48dp"
+                app:circle_color="#0EB695"
+                app:circle_radius="20dp"
+                app:circle_radius_pressed="20dp"
+                />
+        </FrameLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_weight="1">
 
-            android:gravity="center"
-            android:id="@+id/wheel_picker_sets"
+            <com.aigestudio.wheelpicker.WheelPicker
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
 
+                android:gravity="center"
+                android:id="@+id/wheel_picker_sets"
 
-            />
+                />
+
+            <com.aigestudio.wheelpicker.WheelPicker
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+
+                android:gravity="center"
+                android:id="@+id/wheel_picker_games_in_set"
+                android:visibility="gone"
+
+                />
+
+            <com.aigestudio.wheelpicker.WheelPicker
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+
+                android:gravity="center"
+                android:id="@+id/wheel_picker_tiebreak"
+                android:visibility="gone"
+
+                />
+
+            <com.aigestudio.wheelpicker.WheelPicker
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+
+                android:gravity="center"
+                android:id="@+id/wheel_picker_deuce"
+                android:visibility="gone"
+
+                />
+
+            <com.aigestudio.wheelpicker.WheelPicker
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+
+                android:gravity="center"
+                android:id="@+id/wheel_picker_serve"
+                android:visibility="gone"
+
+                />
+        </LinearLayout>
+
 
 
 

@@ -54,4 +54,5 @@
     <string name="voice_support_buy">購買</string>
     <string name="voice_on">語音 開啟</string>
     <string name="voice_off">語音 關閉</string>
+    <string name="select_title">選擇: %s</string>
 </resources>
