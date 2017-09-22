@@ -4,8 +4,8 @@
     <string name="setup_one_set">1 盤</string>
     <string name="setup_three_sets">3 盤</string>
     <string name="setup_five_sets">5 盤</string>
-    <string name="setup_six_games">6局一盤</string>
-    <string name="setup_four_game">4局一盤</string>
+    <string name="setup_six_games">6局</string>
+    <string name="setup_four_game">4局</string>
     <string name="setup_tiebreak">Tiebreak</string>
     <string name="setup_deuce">Deuce</string>
     <string name="setup_deciding_game">決勝局</string>
@@ -55,4 +55,7 @@
     <string name="voice_on">語音 開啟</string>
     <string name="voice_off">語音 關閉</string>
     <string name="select_title">選擇: %s</string>
+    <string name="setup_a_set">一盤</string>
+    <string name="setup_game">局</string>
+    <string name="setup_point">分</string>
 </resources>

@@ -201,7 +201,7 @@ public class SetsActivity extends WearableActivity {
                 games_in_set_selected = i;
 
                 Intent newIntent = new Intent(SetsActivity.this, DialogActivity.class);
-                newIntent.putExtra("TITLE", myList_games_in_set.get(games_in_set_selected));
+                newIntent.putExtra("TITLE", myList_games_in_set.get(games_in_set_selected)+" "+getResources().getString(R.string.setup_a_set));
                 startActivityForResult(newIntent, REQUEST_CODE);
 
             }
@@ -214,7 +214,11 @@ public class SetsActivity extends WearableActivity {
                 tiebreak_selected = i;
 
                 Intent newIntent = new Intent(SetsActivity.this, DialogActivity.class);
-                newIntent.putExtra("TITLE", myList_tiebreak.get(tiebreak_selected));
+                if (i == 0) {
+                    newIntent.putExtra("TITLE", myList_tiebreak.get(tiebreak_selected));
+                } else {
+                    newIntent.putExtra("TITLE", myList_tiebreak.get(tiebreak_selected)+" "+getResources().getString(R.string.setup_game));
+                }
                 startActivityForResult(newIntent, REQUEST_CODE);
 
             }
@@ -227,7 +231,11 @@ public class SetsActivity extends WearableActivity {
                 deuce_selected = i;
 
                 Intent newIntent = new Intent(SetsActivity.this, DialogActivity.class);
-                newIntent.putExtra("TITLE", myList_deuce.get(deuce_selected));
+                if (i == 0) {
+                    newIntent.putExtra("TITLE", myList_deuce.get(deuce_selected));
+                } else {
+                    newIntent.putExtra("TITLE", myList_deuce.get(deuce_selected)+" "+getResources().getString(R.string.setup_point));
+                }
                 startActivityForResult(newIntent, REQUEST_CODE);
 
             }

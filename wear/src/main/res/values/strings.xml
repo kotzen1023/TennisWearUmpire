@@ -3,8 +3,8 @@
     <string name="setup_one_set">1 set</string>
     <string name="setup_three_sets">3 Sets</string>
     <string name="setup_five_sets">5 Sets</string>
-    <string name="setup_four_game">4 Games a set</string>
-    <string name="setup_six_games">6 Games a set</string>
+    <string name="setup_four_game">4 Games</string>
+    <string name="setup_six_games">6 Games</string>
     <string name="setup_tiebreak">Tiebreak</string>
     <string name="setup_deuce">Deuce</string>
     <string name="setup_deciding_game">Deciding Game</string>
@@ -54,4 +54,7 @@
     <string name="voice_on">Voice On</string>
     <string name="voice_off">Voice Off</string>
     <string name="select_title">Select: %s</string>
+    <string name="setup_a_set">a set</string>
+    <string name="setup_game">Game</string>
+    <string name="setup_point">Point</string>
 </resources>
