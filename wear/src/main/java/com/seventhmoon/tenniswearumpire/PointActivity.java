@@ -41,11 +41,12 @@ import java.util.Date;
 import java.util.Deque;
 import java.util.Locale;
 
-import static com.seventhmoon.tenniswearumpire.Data.Constants.VOICE_TYPE.GBR_MAN;
+
 //import static com.seventhmoon.tenniswearboard.Data.InitData.is_debug;
 //import static com.seventhmoon.tenniswearboard.Data.InitData.mGoogleApiClient;
 //import static com.seventhmoon.tenniswearboard.Data.InitData.mSensorManager;
 //import static com.seventhmoon.tenniswearboard.Data.InitData.mStepCounter;
+import static com.seventhmoon.tenniswearumpire.Data.Constants.VOICE_TYPE.*;
 import static com.seventhmoon.tenniswearumpire.SetsActivity.myData;
 
 
@@ -126,6 +127,8 @@ public class PointActivity extends WearableActivity {
     static SharedPreferences.Editor editor;
     private static final String FILE_NAME = "Preference";
 
+    private static boolean is_In_SuperTiebreak = false;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -141,7 +144,22 @@ public class PointActivity extends WearableActivity {
         pref = getSharedPreferences(FILE_NAME, MODE_PRIVATE);
         voiceOn = pref.getBoolean("VOICE_ON", false);
 
+        int current_voice_select = pref.getInt("VOICE_SELECT", 0);
 
+        switch (current_voice_select) {
+            case 0:
+                current_voice_type = GBR_MAN;
+                break;
+            case 1:
+                current_voice_type = GBR_WOMAN;
+                break;
+            case 2:
+                current_voice_type = USER_RECORD;
+                break;
+            default:
+                current_voice_type = GBR_MAN;
+                break;
+        }
 
         Intent intent = getIntent();
 
@@ -941,155 +959,92 @@ public class PointActivity extends WearableActivity {
             Log.d(TAG, "[In Tiebreak]");
             byte game;
 
-            if (games.equals("0")) { //6 game in a set
-                Log.d(TAG, "[6 games in a set]"); //6:6 => tiebreak
+            if (tiebreak.equals("2")) { //super tiebreak
+                if (games.equals("0")) { //6 game in a set
+                    Log.d(TAG, "[6 games in a set]"); //6:6 => tiebreak
 
-                if (new_state.getSet_point_up(current_set) == 7 && new_state.getSet_point_down(current_set) <= 5) {
-                    //7 : 0,1,2,3,4,5 => oppt win this game
-                    //set tiebreak point
-                    new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
-                    new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
-                    //set point clean
-                    new_state.setSet_point_up(current_set, (byte)0);
-                    new_state.setSet_point_down(current_set, (byte)0);
-                    //add to game
-                    game = new_state.getSet_game_up(current_set);
-                    game++;
-                    new_state.setSet_game_up(current_set, game);
-                    //change serve
-                    //if (new_state.isServe()) {
-                    if (am_I_Tiebreak_First_Serve) {
-                        new_state.setServe(false);
-                    } else {
-                        new_state.setServe(true);
-                    }
-
-                    //leave tiebreak;
-                    new_state.setInTiebreak(false);
-                    is_current_game_over = true;
-                    //do stop play
-                    voicePlay.doStopAudioPlayMulti();
-                    //add voice
-                    voiceList.clear();
-                    voiceUserList.clear();
-                    choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
-                } else if (new_state.getSet_point_up(current_set) <= 5 && new_state.getSet_point_down(current_set) == 7) {
-                    //0,1,2,3,4,5 : 7 => you win this game
-                    //set tiebreak point
-                    new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
-                    new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
-                    //set point clean
-                    new_state.setSet_point_up(current_set, (byte)0);
-                    new_state.setSet_point_down(current_set, (byte)0);
-                    //add to game
-                    game = new_state.getSet_game_down(current_set);
-                    game++;
-                    new_state.setSet_game_down(current_set, game);
-                    //change serve
-                    //if (new_state.isServe()) {
-                    if (am_I_Tiebreak_First_Serve) {
-                        new_state.setServe(false);
-                    } else {
-                        new_state.setServe(true);
-                    }
-                    //leave tiebreak;
-                    new_state.setInTiebreak(false);
-                    is_current_game_over = true;
-                    //do stop play
-                    voicePlay.doStopAudioPlayMulti();
-                    //add voice
-                    voiceList.clear();
-                    voiceUserList.clear();
-                    choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
-                } else if (new_state.getSet_point_up(current_set) >= 6 &&
-                        new_state.getSet_point_down(current_set) >= 6 &&
-                        (new_state.getSet_point_up(current_set) - new_state.getSet_point_down(current_set)) == 2) {
-                    //8:6, 9:7, 10:8.... => oppt win this game
-                    //set tiebreak point
-                    new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
-                    new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
-                    //set point clean
-                    new_state.setSet_point_up(current_set, (byte)0);
-                    new_state.setSet_point_down(current_set, (byte)0);
-                    //add to game
-                    game = new_state.getSet_game_up(current_set);
-                    game++;
-                    new_state.setSet_game_up(current_set, game);
-                    //change serve
-                    //if (new_state.isServe()) {
-                    if (am_I_Tiebreak_First_Serve) {
-                        new_state.setServe(false);
-                    } else {
-                        new_state.setServe(true);
-                    }
-
-                    //leave tiebreak;
-                    new_state.setInTiebreak(false);
-                    is_current_game_over = true;
-
-                    //do stop play
-                    voicePlay.doStopAudioPlayMulti();
-                    //add voice
-                    voiceList.clear();
-                    voiceUserList.clear();
-                    choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
-                } else if (new_state.getSet_point_up(current_set) >= 6 &&
-                        new_state.getSet_point_down(current_set) >= 6 &&
-                        (new_state.getSet_point_down(current_set) - new_state.getSet_point_up(current_set)) == 2) {
-                    //6:8, 7:9, 8:10.... => you win this game
-                    //set tiebreak point
-                    new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
-                    new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
-                    //set point clean
-                    new_state.setSet_point_up(current_set, (byte)0);
-                    new_state.setSet_point_down(current_set, (byte)0);
-                    //add to game
-                    game = new_state.getSet_game_down(current_set);
-                    game++;
-                    new_state.setSet_game_down(current_set, game);
-                    //change serve
-                    //if (new_state.isServe()) {
-                    if (am_I_Tiebreak_First_Serve) {
-                        new_state.setServe(false);
-                    } else {
-                        new_state.setServe(true);
-                    }
-
-                    //leave tiebreak;
-                    new_state.setInTiebreak(false);
-                    is_current_game_over = true;
-                    //do stop play
-                    voicePlay.doStopAudioPlayMulti();
-                    //add voice
-                    voiceList.clear();
-                    voiceUserList.clear();
-                    choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
-                } else {
-                    Log.d(TAG, "Other tie break, isServe = "+new_state.isServe());
-
-                    byte plus = (byte) (new_state.getSet_point_up(current_set)+new_state.getSet_point_down(current_set));
-
-                    if (plus%2 == 1) {
+                    if (new_state.getSet_point_up(current_set) == 10 && new_state.getSet_point_down(current_set) <= 8) {
+                        //10 : 0,1,2,3,4,5,6,7,8 => oppt win this game
+                        //set tiebreak point
+                        new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
+                        new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
+                        //set point clean
+                        new_state.setSet_point_up(current_set, (byte)0);
+                        new_state.setSet_point_down(current_set, (byte)0);
+                        //add to game
+                        game = new_state.getSet_game_up(current_set);
+                        game++;
+                        new_state.setSet_game_up(current_set, game);
                         //change serve
-                        Log.d(TAG, "==>Points plus become odd, change serve!");
-                        if (new_state.isServe()) {
+                        //if (new_state.isServe()) {
+                        if (am_I_Tiebreak_First_Serve) {
                             new_state.setServe(false);
                         } else {
                             new_state.setServe(true);
                         }
-                    }
 
-                    is_current_game_over = false;
-
-                    if (new_state.getSet_point_up(current_set) > 99 ||
-                            new_state.getSet_point_down(current_set) > 99) { //point > 99, don't play voice
-                        toast("The voice will not support while points more than 99");
+                        //leave tiebreak;
+                        new_state.setInTiebreak(false);
+                        is_current_game_over = true;
                         //do stop play
                         voicePlay.doStopAudioPlayMulti();
                         //add voice
                         voiceList.clear();
                         voiceUserList.clear();
-                    } else {
+                        choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
+                    } else if (new_state.getSet_point_up(current_set) <= 8 && new_state.getSet_point_down(current_set) == 10) {
+                        //0,1,2,3,4,5,6,7,8 : 10 => you win this game
+                        //set tiebreak point
+                        new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
+                        new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
+                        //set point clean
+                        new_state.setSet_point_up(current_set, (byte)0);
+                        new_state.setSet_point_down(current_set, (byte)0);
+                        //add to game
+                        game = new_state.getSet_game_down(current_set);
+                        game++;
+                        new_state.setSet_game_down(current_set, game);
+                        //change serve
+                        //if (new_state.isServe()) {
+                        if (am_I_Tiebreak_First_Serve) {
+                            new_state.setServe(false);
+                        } else {
+                            new_state.setServe(true);
+                        }
+                        //leave tiebreak;
+                        new_state.setInTiebreak(false);
+                        is_current_game_over = true;
+                        //do stop play
+                        voicePlay.doStopAudioPlayMulti();
+                        //add voice
+                        voiceList.clear();
+                        voiceUserList.clear();
+                        choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
+                    } else if (new_state.getSet_point_up(current_set) >= 9 &&
+                            new_state.getSet_point_down(current_set) >= 9 &&
+                            (new_state.getSet_point_up(current_set) - new_state.getSet_point_down(current_set)) == 2) {
+                        //8:6, 9:7, 10:8.... => oppt win this game
+                        //set tiebreak point
+                        new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
+                        new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
+                        //set point clean
+                        new_state.setSet_point_up(current_set, (byte)0);
+                        new_state.setSet_point_down(current_set, (byte)0);
+                        //add to game
+                        game = new_state.getSet_game_up(current_set);
+                        game++;
+                        new_state.setSet_game_up(current_set, game);
+                        //change serve
+                        //if (new_state.isServe()) {
+                        if (am_I_Tiebreak_First_Serve) {
+                            new_state.setServe(false);
+                        } else {
+                            new_state.setServe(true);
+                        }
+
+                        //leave tiebreak;
+                        new_state.setInTiebreak(false);
+                        is_current_game_over = true;
 
                         //do stop play
                         voicePlay.doStopAudioPlayMulti();
@@ -1097,167 +1052,160 @@ public class PointActivity extends WearableActivity {
                         voiceList.clear();
                         voiceUserList.clear();
                         choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
-                        //voiceList.add(call);
+                    } else if (new_state.getSet_point_up(current_set) >= 9 &&
+                            new_state.getSet_point_down(current_set) >= 9 &&
+                            (new_state.getSet_point_down(current_set) - new_state.getSet_point_up(current_set)) == 2) {
+                        //6:8, 7:9, 8:10.... => you win this game
+                        //set tiebreak point
+                        new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
+                        new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
+                        //set point clean
+                        new_state.setSet_point_up(current_set, (byte)0);
+                        new_state.setSet_point_down(current_set, (byte)0);
+                        //add to game
+                        game = new_state.getSet_game_down(current_set);
+                        game++;
+                        new_state.setSet_game_down(current_set, game);
+                        //change serve
+                        //if (new_state.isServe()) {
+                        if (am_I_Tiebreak_First_Serve) {
+                            new_state.setServe(false);
+                        } else {
+                            new_state.setServe(true);
+                        }
+
+                        //leave tiebreak;
+                        new_state.setInTiebreak(false);
+                        is_current_game_over = true;
+                        //do stop play
+                        voicePlay.doStopAudioPlayMulti();
+                        //add voice
+                        voiceList.clear();
+                        voiceUserList.clear();
+                        choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
+                    } else {
+                        Log.d(TAG, "Other tie break, isServe = "+new_state.isServe());
+
+                        byte plus = (byte) (new_state.getSet_point_up(current_set)+new_state.getSet_point_down(current_set));
+
+                        if (plus%2 == 1) {
+                            //change serve
+                            Log.d(TAG, "==>Points plus become odd, change serve!");
+                            if (new_state.isServe()) {
+                                new_state.setServe(false);
+                            } else {
+                                new_state.setServe(true);
+                            }
+                        }
+
+                        is_current_game_over = false;
+
+                        if (new_state.getSet_point_up(current_set) > 99 ||
+                                new_state.getSet_point_down(current_set) > 99) { //point > 99, don't play voice
+                            toast("The voice will not support while points more than 99");
+                            //do stop play
+                            voicePlay.doStopAudioPlayMulti();
+                            //add voice
+                            voiceList.clear();
+                            voiceUserList.clear();
+                        } else {
+
+                            //do stop play
+                            voicePlay.doStopAudioPlayMulti();
+                            //add voice
+                            voiceList.clear();
+                            voiceUserList.clear();
+                            choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
+                            //voiceList.add(call);
+                        }
                     }
                 }
-            } else {
-                Log.d(TAG, "[4 games in a set]"); //4:4 => tiebreak
+            } else { //not super tiebreak
+                if (games.equals("0")) { //6 game in a set
+                    Log.d(TAG, "[6 games in a set]"); //6:6 => tiebreak
 
-                if (new_state.getSet_point_up(current_set) == 5 && new_state.getSet_point_down(current_set) <= 3) {
-                    //7 : 0,1,2,3,4,5 => oppt win this game
-                    //set tiebreak point
-                    new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
-                    new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
-                    //set point clean
-                    new_state.setSet_point_up(current_set, (byte)0);
-                    new_state.setSet_point_down(current_set, (byte)0);
-                    //add to game
-                    game = new_state.getSet_game_up(current_set);
-                    game++;
-                    new_state.setSet_game_up(current_set, game);
-                    //change serve
-                    //if (new_state.isServe()) {
-                    //if (am_I_Tiebreak_First_Serve) {
-                    if (am_I_Tiebreak_First_Serve) {
-                        new_state.setServe(false);
-                    } else {
-                        new_state.setServe(true);
-                    }
-
-                    //leave tiebreak;
-                    new_state.setInTiebreak(false);
-                    is_current_game_over = true;
-                    //do stop play
-                    voicePlay.doStopAudioPlayMulti();
-                    //add voice
-                    voiceList.clear();
-                    voiceUserList.clear();
-                    choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
-                    //voiceList.add(call);
-                } else if (new_state.getSet_point_up(current_set) <= 3 && new_state.getSet_point_down(current_set) == 5) {
-                    //0,1,2,3,4,5 : 7 => you win this game
-                    //set tiebreak point
-                    new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
-                    new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
-                    //set point clean
-                    new_state.setSet_point_up(current_set, (byte)0);
-                    new_state.setSet_point_down(current_set, (byte)0);
-                    //add to game
-                    game = new_state.getSet_game_down(current_set);
-                    game++;
-                    new_state.setSet_game_down(current_set, game);
-                    //change serve
-                    //if (new_state.isServe()) {
-                    //if (am_I_Tiebreak_First_Serve) {
-                    if (am_I_Tiebreak_First_Serve) {
-                        new_state.setServe(false);
-                    } else {
-                        new_state.setServe(true);
-                    }
-                    //leave tiebreak;
-                    new_state.setInTiebreak(false);
-                    is_current_game_over = true;
-                    //do stop play
-                    voicePlay.doStopAudioPlayMulti();
-                    //add voice
-                    voiceList.clear();
-                    voiceUserList.clear();
-                    choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
-                    //voiceList.add(call);
-                } else if (new_state.getSet_point_up(current_set) >= 4 &&
-                        new_state.getSet_point_down(current_set) >= 4 &&
-                        (new_state.getSet_point_up(current_set) - new_state.getSet_point_down(current_set)) == 2) {
-                    //8:6, 9:7, 10:8.... => oppt win this game
-                    //set tiebreak point
-                    new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
-                    new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
-                    //set point clean
-                    new_state.setSet_point_up(current_set, (byte)0);
-                    new_state.setSet_point_down(current_set, (byte)0);
-                    //add to game
-                    game = new_state.getSet_game_up(current_set);
-                    game++;
-                    new_state.setSet_game_up(current_set, game);
-                    //change serve
-                    //if (new_state.isServe()) {
-                    //if (am_I_Tiebreak_First_Serve) {
-                    if (am_I_Tiebreak_First_Serve) {
-                        new_state.setServe(false);
-                    } else {
-                        new_state.setServe(true);
-                    }
-
-                    //leave tiebreak;
-                    new_state.setInTiebreak(false);
-                    is_current_game_over = true;
-                    //do stop play
-                    voicePlay.doStopAudioPlayMulti();
-                    //add voice
-                    voiceList.clear();
-                    voiceUserList.clear();
-                    choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
-                    //voiceList.add(call);
-                } else if (new_state.getSet_point_up(current_set) >= 4 &&
-                        new_state.getSet_point_down(current_set) >= 4 &&
-                        (new_state.getSet_point_down(current_set) - new_state.getSet_point_up(current_set)) == 2) {
-                    //6:8, 7:9, 8:10.... => you win this game
-                    //set tiebreak point
-                    new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
-                    new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
-                    //set point clean
-                    new_state.setSet_point_up(current_set, (byte)0);
-                    new_state.setSet_point_down(current_set, (byte)0);
-                    //add to game
-                    game = new_state.getSet_game_down(current_set);
-                    game++;
-                    new_state.setSet_game_down(current_set, game);
-                    //change serve
-                    //if (new_state.isServe()) {
-                    //if (am_I_Tiebreak_First_Serve) {
-                    if (am_I_Tiebreak_First_Serve) {
-                        new_state.setServe(false);
-                    } else {
-                        new_state.setServe(true);
-                    }
-
-                    //leave tiebreak;
-                    new_state.setInTiebreak(false);
-                    is_current_game_over = true;
-                    //do stop play
-                    voicePlay.doStopAudioPlayMulti();
-                    //add voice
-                    voiceList.clear();
-                    voiceUserList.clear();
-                    choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
-                    //voiceList.add(call);
-                } else {
-                    Log.d(TAG, "Other tie break, isServe = "+new_state.isServe());
-
-
-
-                    byte plus = (byte) (new_state.getSet_point_up(current_set)+new_state.getSet_point_down(current_set));
-
-                    if (plus%2 == 1) {
+                    if (new_state.getSet_point_up(current_set) == 7 && new_state.getSet_point_down(current_set) <= 5) {
+                        //7 : 0,1,2,3,4,5 => oppt win this game
+                        //set tiebreak point
+                        new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
+                        new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
+                        //set point clean
+                        new_state.setSet_point_up(current_set, (byte)0);
+                        new_state.setSet_point_down(current_set, (byte)0);
+                        //add to game
+                        game = new_state.getSet_game_up(current_set);
+                        game++;
+                        new_state.setSet_game_up(current_set, game);
                         //change serve
-                        Log.d(TAG, "==>Points plus become odd, change serve!");
-                        if (new_state.isServe()) {
+                        //if (new_state.isServe()) {
+                        if (am_I_Tiebreak_First_Serve) {
                             new_state.setServe(false);
                         } else {
                             new_state.setServe(true);
                         }
-                    }
 
-                    is_current_game_over = false;
-
-                    if (new_state.getSet_point_up(current_set) > 99 ||
-                            new_state.getSet_point_down(current_set) > 99) { //point > 99, don't play voice
-                        toast("The voice will not support while points more than 99");
+                        //leave tiebreak;
+                        new_state.setInTiebreak(false);
+                        is_current_game_over = true;
                         //do stop play
                         voicePlay.doStopAudioPlayMulti();
                         //add voice
                         voiceList.clear();
                         voiceUserList.clear();
-                    } else {
+                        choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
+                    } else if (new_state.getSet_point_up(current_set) <= 5 && new_state.getSet_point_down(current_set) == 7) {
+                        //0,1,2,3,4,5 : 7 => you win this game
+                        //set tiebreak point
+                        new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
+                        new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
+                        //set point clean
+                        new_state.setSet_point_up(current_set, (byte)0);
+                        new_state.setSet_point_down(current_set, (byte)0);
+                        //add to game
+                        game = new_state.getSet_game_down(current_set);
+                        game++;
+                        new_state.setSet_game_down(current_set, game);
+                        //change serve
+                        //if (new_state.isServe()) {
+                        if (am_I_Tiebreak_First_Serve) {
+                            new_state.setServe(false);
+                        } else {
+                            new_state.setServe(true);
+                        }
+                        //leave tiebreak;
+                        new_state.setInTiebreak(false);
+                        is_current_game_over = true;
+                        //do stop play
+                        voicePlay.doStopAudioPlayMulti();
+                        //add voice
+                        voiceList.clear();
+                        voiceUserList.clear();
+                        choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
+                    } else if (new_state.getSet_point_up(current_set) >= 6 &&
+                            new_state.getSet_point_down(current_set) >= 6 &&
+                            (new_state.getSet_point_up(current_set) - new_state.getSet_point_down(current_set)) == 2) {
+                        //8:6, 9:7, 10:8.... => oppt win this game
+                        //set tiebreak point
+                        new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
+                        new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
+                        //set point clean
+                        new_state.setSet_point_up(current_set, (byte)0);
+                        new_state.setSet_point_down(current_set, (byte)0);
+                        //add to game
+                        game = new_state.getSet_game_up(current_set);
+                        game++;
+                        new_state.setSet_game_up(current_set, game);
+                        //change serve
+                        //if (new_state.isServe()) {
+                        if (am_I_Tiebreak_First_Serve) {
+                            new_state.setServe(false);
+                        } else {
+                            new_state.setServe(true);
+                        }
+
+                        //leave tiebreak;
+                        new_state.setInTiebreak(false);
+                        is_current_game_over = true;
 
                         //do stop play
                         voicePlay.doStopAudioPlayMulti();
@@ -1265,15 +1213,243 @@ public class PointActivity extends WearableActivity {
                         voiceList.clear();
                         voiceUserList.clear();
                         choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
+                    } else if (new_state.getSet_point_up(current_set) >= 6 &&
+                            new_state.getSet_point_down(current_set) >= 6 &&
+                            (new_state.getSet_point_down(current_set) - new_state.getSet_point_up(current_set)) == 2) {
+                        //6:8, 7:9, 8:10.... => you win this game
+                        //set tiebreak point
+                        new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
+                        new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
+                        //set point clean
+                        new_state.setSet_point_up(current_set, (byte)0);
+                        new_state.setSet_point_down(current_set, (byte)0);
+                        //add to game
+                        game = new_state.getSet_game_down(current_set);
+                        game++;
+                        new_state.setSet_game_down(current_set, game);
+                        //change serve
+                        //if (new_state.isServe()) {
+                        if (am_I_Tiebreak_First_Serve) {
+                            new_state.setServe(false);
+                        } else {
+                            new_state.setServe(true);
+                        }
+
+                        //leave tiebreak;
+                        new_state.setInTiebreak(false);
+                        is_current_game_over = true;
+                        //do stop play
+                        voicePlay.doStopAudioPlayMulti();
+                        //add voice
+                        voiceList.clear();
+                        voiceUserList.clear();
+                        choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
+                    } else {
+                        Log.d(TAG, "Other tie break, isServe = "+new_state.isServe());
+
+                        byte plus = (byte) (new_state.getSet_point_up(current_set)+new_state.getSet_point_down(current_set));
+
+                        if (plus%2 == 1) {
+                            //change serve
+                            Log.d(TAG, "==>Points plus become odd, change serve!");
+                            if (new_state.isServe()) {
+                                new_state.setServe(false);
+                            } else {
+                                new_state.setServe(true);
+                            }
+                        }
+
+                        is_current_game_over = false;
+
+                        if (new_state.getSet_point_up(current_set) > 99 ||
+                                new_state.getSet_point_down(current_set) > 99) { //point > 99, don't play voice
+                            toast("The voice will not support while points more than 99");
+                            //do stop play
+                            voicePlay.doStopAudioPlayMulti();
+                            //add voice
+                            voiceList.clear();
+                            voiceUserList.clear();
+                        } else {
+
+                            //do stop play
+                            voicePlay.doStopAudioPlayMulti();
+                            //add voice
+                            voiceList.clear();
+                            voiceUserList.clear();
+                            choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
+                            //voiceList.add(call);
+                        }
+                    }
+                } else {
+                    Log.d(TAG, "[4 games in a set]"); //4:4 => tiebreak
+
+                    if (new_state.getSet_point_up(current_set) == 5 && new_state.getSet_point_down(current_set) <= 3) {
+                        //7 : 0,1,2,3,4,5 => oppt win this game
+                        //set tiebreak point
+                        new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
+                        new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
+                        //set point clean
+                        new_state.setSet_point_up(current_set, (byte)0);
+                        new_state.setSet_point_down(current_set, (byte)0);
+                        //add to game
+                        game = new_state.getSet_game_up(current_set);
+                        game++;
+                        new_state.setSet_game_up(current_set, game);
+                        //change serve
+                        //if (new_state.isServe()) {
+                        //if (am_I_Tiebreak_First_Serve) {
+                        if (am_I_Tiebreak_First_Serve) {
+                            new_state.setServe(false);
+                        } else {
+                            new_state.setServe(true);
+                        }
+
+                        //leave tiebreak;
+                        new_state.setInTiebreak(false);
+                        is_current_game_over = true;
+                        //do stop play
+                        voicePlay.doStopAudioPlayMulti();
+                        //add voice
+                        voiceList.clear();
+                        voiceUserList.clear();
+                        choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
                         //voiceList.add(call);
+                    } else if (new_state.getSet_point_up(current_set) <= 3 && new_state.getSet_point_down(current_set) == 5) {
+                        //0,1,2,3,4,5 : 7 => you win this game
+                        //set tiebreak point
+                        new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
+                        new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
+                        //set point clean
+                        new_state.setSet_point_up(current_set, (byte)0);
+                        new_state.setSet_point_down(current_set, (byte)0);
+                        //add to game
+                        game = new_state.getSet_game_down(current_set);
+                        game++;
+                        new_state.setSet_game_down(current_set, game);
+                        //change serve
+                        //if (new_state.isServe()) {
+                        //if (am_I_Tiebreak_First_Serve) {
+                        if (am_I_Tiebreak_First_Serve) {
+                            new_state.setServe(false);
+                        } else {
+                            new_state.setServe(true);
+                        }
+                        //leave tiebreak;
+                        new_state.setInTiebreak(false);
+                        is_current_game_over = true;
+                        //do stop play
+                        voicePlay.doStopAudioPlayMulti();
+                        //add voice
+                        voiceList.clear();
+                        voiceUserList.clear();
+                        choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
+                        //voiceList.add(call);
+                    } else if (new_state.getSet_point_up(current_set) >= 4 &&
+                            new_state.getSet_point_down(current_set) >= 4 &&
+                            (new_state.getSet_point_up(current_set) - new_state.getSet_point_down(current_set)) == 2) {
+                        //8:6, 9:7, 10:8.... => oppt win this game
+                        //set tiebreak point
+                        new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
+                        new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
+                        //set point clean
+                        new_state.setSet_point_up(current_set, (byte)0);
+                        new_state.setSet_point_down(current_set, (byte)0);
+                        //add to game
+                        game = new_state.getSet_game_up(current_set);
+                        game++;
+                        new_state.setSet_game_up(current_set, game);
+                        //change serve
+                        //if (new_state.isServe()) {
+                        //if (am_I_Tiebreak_First_Serve) {
+                        if (am_I_Tiebreak_First_Serve) {
+                            new_state.setServe(false);
+                        } else {
+                            new_state.setServe(true);
+                        }
+
+                        //leave tiebreak;
+                        new_state.setInTiebreak(false);
+                        is_current_game_over = true;
+                        //do stop play
+                        voicePlay.doStopAudioPlayMulti();
+                        //add voice
+                        voiceList.clear();
+                        voiceUserList.clear();
+                        choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
+                        //voiceList.add(call);
+                    } else if (new_state.getSet_point_up(current_set) >= 4 &&
+                            new_state.getSet_point_down(current_set) >= 4 &&
+                            (new_state.getSet_point_down(current_set) - new_state.getSet_point_up(current_set)) == 2) {
+                        //6:8, 7:9, 8:10.... => you win this game
+                        //set tiebreak point
+                        new_state.setSet_tiebreak_point_up(current_set, new_state.getSet_point_up(current_set));
+                        new_state.setSet_tiebreak_point_down(current_set, new_state.getSet_point_down(current_set));
+                        //set point clean
+                        new_state.setSet_point_up(current_set, (byte)0);
+                        new_state.setSet_point_down(current_set, (byte)0);
+                        //add to game
+                        game = new_state.getSet_game_down(current_set);
+                        game++;
+                        new_state.setSet_game_down(current_set, game);
+                        //change serve
+                        //if (new_state.isServe()) {
+                        //if (am_I_Tiebreak_First_Serve) {
+                        if (am_I_Tiebreak_First_Serve) {
+                            new_state.setServe(false);
+                        } else {
+                            new_state.setServe(true);
+                        }
+
+                        //leave tiebreak;
+                        new_state.setInTiebreak(false);
+                        is_current_game_over = true;
+                        //do stop play
+                        voicePlay.doStopAudioPlayMulti();
+                        //add voice
+                        voiceList.clear();
+                        voiceUserList.clear();
+                        choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
+                        //voiceList.add(call);
+                    } else {
+                        Log.d(TAG, "Other tie break, isServe = "+new_state.isServe());
+
+
+
+                        byte plus = (byte) (new_state.getSet_point_up(current_set)+new_state.getSet_point_down(current_set));
+
+                        if (plus%2 == 1) {
+                            //change serve
+                            Log.d(TAG, "==>Points plus become odd, change serve!");
+                            if (new_state.isServe()) {
+                                new_state.setServe(false);
+                            } else {
+                                new_state.setServe(true);
+                            }
+                        }
+
+                        is_current_game_over = false;
+
+                        if (new_state.getSet_point_up(current_set) > 99 ||
+                                new_state.getSet_point_down(current_set) > 99) { //point > 99, don't play voice
+                            toast("The voice will not support while points more than 99");
+                            //do stop play
+                            voicePlay.doStopAudioPlayMulti();
+                            //add voice
+                            voiceList.clear();
+                            voiceUserList.clear();
+                        } else {
+
+                            //do stop play
+                            voicePlay.doStopAudioPlayMulti();
+                            //add voice
+                            voiceList.clear();
+                            voiceUserList.clear();
+                            choosePointVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_point_up(current_set), new_state.getSet_point_down(current_set));
+                            //voiceList.add(call);
+                        }
                     }
                 }
             }
-
-
-
-
-
 
         } else { //not in tiebreak;
             Log.d(TAG, "[Not in Tiebreak]");
@@ -1472,102 +1648,143 @@ public class PointActivity extends WearableActivity {
         byte current_set = new_state.getCurrent_set();
         byte setsWinUp = new_state.getSetsUp();
         byte setsWinDown = new_state.getSetsDown();
-        if (tiebreak.equals("0")) { //use tibreak
+
+        Log.e(TAG, "tiebreak = "+tiebreak);
+
+        if (tiebreak.equals("0") || tiebreak.equals("2")) { //use tibreak or super tiebreak
             Log.d(TAG, "[Use Tiebreak]");
 
             if (games.equals("0")) { //6 game in a set
                 Log.d(TAG, "[6 game in a set start]");
 
-                if (new_state.getSet_game_up(current_set) == 6 &&
-                        new_state.getSet_game_down(current_set) == 6) {
-                    new_state.setInTiebreak(true); //into tiebreak;
+                if (is_In_SuperTiebreak) {
+                    Log.d(TAG, "[In SuperTiebreak start]");
 
-                    //am I(down) first serve?
-                    if (new_state.isServe()) {
-                        am_I_Tiebreak_First_Serve = true;
+                    if (new_state.getSet_game_up(current_set) == 1 &&
+                            new_state.getSet_game_down(current_set) == 0) { // 1:0 => oppt win this set
+                        //set sets win
+                        setsWinUp++;
+                        new_state.setSetsUp(setsWinUp);
+                        checkSets(new_state);
+                        //play voice
+                        if (voiceOn) {
+                            voicePlay.audioPlayMulti(voiceList);
+                        }
+                    } else if (new_state.getSet_game_up(current_set) == 0 &&
+                            new_state.getSet_game_down(current_set) == 1) { // 0:1 => you win this set
+                        //set sets win
+                        setsWinDown++;
+                        new_state.setSetsDown(setsWinDown);
+                        checkSets(new_state);
+                        //play voice
+                        if (voiceOn) {
+                            voicePlay.audioPlayMulti(voiceList);
+                        }
                     } else {
-                        am_I_Tiebreak_First_Serve = false;
+                        Log.d(TAG, "set "+current_set+" game: up = "+new_state.getSet_game_up(current_set)+", down = "+new_state.getSet_game_down(current_set));
+                        //add voice
+                        if(is_current_game_over)
+                            chooseGameVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_game_up(current_set), new_state.getSet_game_down(current_set));
+                        //play voice
+                        if (voiceOn) {
+                            voicePlay.audioPlayMulti(voiceList);
+                        }
                     }
-
-                    //add voice
-
-                    if(is_current_game_over)
-                        chooseGameVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_game_up(current_set), new_state.getSet_game_down(current_set));
-
-                    //play voice
-                    if (voiceOn) {
-                        voicePlay.audioPlayMulti(voiceList);
-                    }
-                } else if (new_state.getSet_game_up(current_set) == 7 &&
-                        new_state.getSet_game_down(current_set) == 5) { // 7:5 => oppt win this set
-                    //set sets win
-                    setsWinUp++;
-                    new_state.setSetsUp(setsWinUp);
-                    checkSets(new_state);
-                    //play voice
-                    if (voiceOn) {
-                        voicePlay.audioPlayMulti(voiceList);
-                    }
-                } else if (new_state.getSet_game_up(current_set) == 5 &&
-                        new_state.getSet_game_down(current_set) == 7) { // 5:7 => you win this set
-                    //set sets win
-                    setsWinDown++;
-                    new_state.setSetsDown(setsWinDown);
-                    checkSets(new_state);
-                    //play voice
-                    if (voiceOn) {
-                        voicePlay.audioPlayMulti(voiceList);
-                    }
-                } else if (new_state.getSet_game_up(current_set) == 7 &&
-                        new_state.getSet_game_down(current_set) == 6) { // 7:6 => oppt win this set
-                    //set sets win
-                    setsWinUp++;
-                    new_state.setSetsUp(setsWinUp);
-                    checkSets(new_state);
-                    //play voice
-                    if (voiceOn) {
-                        voicePlay.audioPlayMulti(voiceList);
-                    }
-                } else if (new_state.getSet_game_up(current_set) == 6 &&
-                        new_state.getSet_game_down(current_set) == 7) { // 5:7 => you win this set
-                    //set sets win
-                    setsWinDown++;
-                    new_state.setSetsDown(setsWinDown);
-                    checkSets(new_state);
-                    //play voice
-                    if (voiceOn) {
-                        voicePlay.audioPlayMulti(voiceList);
-                    }
-                } else if (new_state.getSet_game_up(current_set) == 6 &&
-                        new_state.getSet_game_down(current_set) <=4 ) { // 6:0,1,2,3,4 => oppt win this set
-                    //set sets win
-                    setsWinUp++;
-                    new_state.setSetsUp(setsWinUp);
-                    checkSets(new_state);
-                    //play voice
-                    if (voiceOn) {
-                        voicePlay.audioPlayMulti(voiceList);
-                    }
-                } else if (new_state.getSet_game_up(current_set) <= 4 &&
-                        new_state.getSet_game_down(current_set) == 6) { // 0,1,2,3,4:6 => you win this set
-                    //set sets win
-                    setsWinDown++;
-                    new_state.setSetsDown(setsWinDown);
-                    checkSets(new_state);
-                    //play voice
-                    if (voiceOn) {
-                        voicePlay.audioPlayMulti(voiceList);
-                    }
+                    Log.d(TAG, "[In SuperTiebreak end]");
                 } else {
-                    Log.d(TAG, "set "+current_set+" game: up = "+new_state.getSet_game_up(current_set)+", down = "+new_state.getSet_game_down(current_set));
-                    //add voice
-                    if(is_current_game_over)
-                        chooseGameVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_game_up(current_set), new_state.getSet_game_down(current_set));
-                    //play voice
-                    if (voiceOn) {
-                        voicePlay.audioPlayMulti(voiceList);
+                    if (new_state.getSet_game_up(current_set) == 6 &&
+                            new_state.getSet_game_down(current_set) == 6) {
+                        new_state.setInTiebreak(true); //into tiebreak;
+
+                        //am I(down) first serve?
+                        if (new_state.isServe()) {
+                            am_I_Tiebreak_First_Serve = true;
+                        } else {
+                            am_I_Tiebreak_First_Serve = false;
+                        }
+
+                        //add voice
+
+                        if(is_current_game_over)
+                            chooseGameVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_game_up(current_set), new_state.getSet_game_down(current_set));
+
+                        //play voice
+                        if (voiceOn) {
+                            voicePlay.audioPlayMulti(voiceList);
+                        }
+                    } else if (new_state.getSet_game_up(current_set) == 7 &&
+                            new_state.getSet_game_down(current_set) == 5) { // 7:5 => oppt win this set
+                        //set sets win
+                        setsWinUp++;
+                        new_state.setSetsUp(setsWinUp);
+                        checkSets(new_state);
+                        //play voice
+                        if (voiceOn) {
+                            voicePlay.audioPlayMulti(voiceList);
+                        }
+                    } else if (new_state.getSet_game_up(current_set) == 5 &&
+                            new_state.getSet_game_down(current_set) == 7) { // 5:7 => you win this set
+                        //set sets win
+                        setsWinDown++;
+                        new_state.setSetsDown(setsWinDown);
+                        checkSets(new_state);
+                        //play voice
+                        if (voiceOn) {
+                            voicePlay.audioPlayMulti(voiceList);
+                        }
+                    } else if (new_state.getSet_game_up(current_set) == 7 &&
+                            new_state.getSet_game_down(current_set) == 6) { // 7:6 => oppt win this set
+                        //set sets win
+                        setsWinUp++;
+                        new_state.setSetsUp(setsWinUp);
+                        checkSets(new_state);
+                        //play voice
+                        if (voiceOn) {
+                            voicePlay.audioPlayMulti(voiceList);
+                        }
+                    } else if (new_state.getSet_game_up(current_set) == 6 &&
+                            new_state.getSet_game_down(current_set) == 7) { // 5:7 => you win this set
+                        //set sets win
+                        setsWinDown++;
+                        new_state.setSetsDown(setsWinDown);
+                        checkSets(new_state);
+                        //play voice
+                        if (voiceOn) {
+                            voicePlay.audioPlayMulti(voiceList);
+                        }
+                    } else if (new_state.getSet_game_up(current_set) == 6 &&
+                            new_state.getSet_game_down(current_set) <=4 ) { // 6:0,1,2,3,4 => oppt win this set
+                        //set sets win
+                        setsWinUp++;
+                        new_state.setSetsUp(setsWinUp);
+                        checkSets(new_state);
+                        //play voice
+                        if (voiceOn) {
+                            voicePlay.audioPlayMulti(voiceList);
+                        }
+                    } else if (new_state.getSet_game_up(current_set) <= 4 &&
+                            new_state.getSet_game_down(current_set) == 6) { // 0,1,2,3,4:6 => you win this set
+                        //set sets win
+                        setsWinDown++;
+                        new_state.setSetsDown(setsWinDown);
+                        checkSets(new_state);
+                        //play voice
+                        if (voiceOn) {
+                            voicePlay.audioPlayMulti(voiceList);
+                        }
+                    } else {
+                        Log.d(TAG, "set "+current_set+" game: up = "+new_state.getSet_game_up(current_set)+", down = "+new_state.getSet_game_down(current_set));
+                        //add voice
+                        if(is_current_game_over)
+                            chooseGameVoice(new_state.isServe(), new_state.isInTiebreak(), new_state.getSet_game_up(current_set), new_state.getSet_game_down(current_set));
+                        //play voice
+                        if (voiceOn) {
+                            voicePlay.audioPlayMulti(voiceList);
+                        }
                     }
                 }
+
+
             } else {
                 Log.d(TAG, "[4 game in a set start]");
 
@@ -1729,6 +1946,10 @@ public class PointActivity extends WearableActivity {
                             match = R.raw.gbr_man_match;
                             voiceList.add(match);
                             break;
+                        case GBR_WOMAN:
+                            match = R.raw.gbr_woman_match;
+                            voiceList.add(match);
+                            break;
                         case USER_RECORD:
                             fileName = "user_match.m4a";
                             voiceUserList.add(fileName);
@@ -1757,8 +1978,21 @@ public class PointActivity extends WearableActivity {
                 if (setsWinUp == 2 || setsWinDown == 2) {
                     new_state.setFinish(true);
                     //voice
-                    match = R.raw.gbr_man_match;
-                    voiceList.add(match);
+                    switch (current_voice_type) {
+                        case GBR_MAN:
+                            match = R.raw.gbr_man_match;
+                            voiceList.add(match);
+                            break;
+                        case GBR_WOMAN:
+                            match = R.raw.gbr_woman_match;
+                            voiceList.add(match);
+                            break;
+                        case USER_RECORD:
+                            fileName = "user_match.m4a";
+                            voiceUserList.add(fileName);
+                            break;
+
+                    }
                     //match and play all
                     for (int i =1; i<=current_set; i++) {
                         if (setsWinUp > setsWinDown) {
@@ -1773,8 +2007,22 @@ public class PointActivity extends WearableActivity {
                     is_finish = true;
                     endTime = System.currentTimeMillis();
                 } else { // new set
+
+                    if (current_set == 2) {
+                        if (tiebreak.equals("2")) { //super tiebreak
+                            new_state.setInTiebreak(true);
+                            is_In_SuperTiebreak = true;
+                        } else {
+                            new_state.setInTiebreak(false);
+                            is_In_SuperTiebreak = false;
+                        }
+                    } else {
+                        new_state.setInTiebreak(false);
+                        is_In_SuperTiebreak = false;
+                    }
+
                     //voice
-                    switch (current_set) {
+                    /*switch (current_set) {
                         case 1:
                             gameSet = R.raw.gbr_man_first_set;
                             voiceList.add(gameSet);
@@ -1784,7 +2032,7 @@ public class PointActivity extends WearableActivity {
                             gameSet = R.raw.gbr_man_second_set;
                             voiceList.add(gameSet);
                             break;
-                    }
+                    }*/
 
                     //and play this set
                     if (new_state.getSet_game_up(current_set) > new_state.getSet_game_down(current_set)) {
@@ -1803,8 +2051,21 @@ public class PointActivity extends WearableActivity {
                 if (setsWinUp == 3 || setsWinDown == 3) {
                     new_state.setFinish(true);
                     //voice
-                    match = R.raw.gbr_man_match;
-                    voiceList.add(match);
+                    switch (current_voice_type) {
+                        case GBR_MAN:
+                            match = R.raw.gbr_man_match;
+                            voiceList.add(match);
+                            break;
+                        case GBR_WOMAN:
+                            match = R.raw.gbr_woman_match;
+                            voiceList.add(match);
+                            break;
+                        case USER_RECORD:
+                            fileName = "user_match.m4a";
+                            voiceUserList.add(fileName);
+                            break;
+
+                    }
                     //match and play all
                     for (int i =1; i<=current_set; i++) {
                         if (setsWinUp > setsWinDown) {
@@ -1819,8 +2080,20 @@ public class PointActivity extends WearableActivity {
                     is_finish = true;
                     endTime = System.currentTimeMillis();
                 } else { // new set
+                    if (current_set == 4) {
+                        if (tiebreak.equals("2")) { //super tiebreak
+                            new_state.setInTiebreak(true);
+                            is_In_SuperTiebreak = true;
+                        } else {
+                            new_state.setInTiebreak(false);
+                            is_In_SuperTiebreak = false;
+                        }
+                    } else {
+                        new_state.setInTiebreak(false);
+                        is_In_SuperTiebreak = false;
+                    }
                     //voice
-                    switch (current_set) {
+                    /*switch (current_set) {
                         case 1:
                             gameSet = R.raw.gbr_man_first_set;
                             voiceList.add(gameSet);
@@ -1837,7 +2110,7 @@ public class PointActivity extends WearableActivity {
                             gameSet = R.raw.gbr_man_forth_set;
                             voiceList.add(gameSet);
                             break;
-                    }
+                    }*/
 
                     //and play this set
                     if (new_state.getSet_game_up(current_set) > new_state.getSet_game_down(current_set)) {
@@ -1859,6 +2132,10 @@ public class PointActivity extends WearableActivity {
                     switch (current_voice_type) {
                         case GBR_MAN:
                             match = R.raw.gbr_man_match;
+                            voiceList.add(match);
+                            break;
+                        case GBR_WOMAN:
+                            match = R.raw.gbr_woman_match;
                             voiceList.add(match);
                             break;
                         case USER_RECORD:
@@ -1913,6 +2190,10 @@ public class PointActivity extends WearableActivity {
                     call = R.raw.gbr_man_game;
                     voiceList.add(call);
                     break;
+                case GBR_WOMAN:
+                    call = R.raw.gbr_woman_game;
+                    voiceList.add(call);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_game.m4a";
                     voiceUserList.add(fileName0);
@@ -1930,6 +2211,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_15_0;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_15_0;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_15_0.m4a";
                                 voiceUserList.add(fileName0);
@@ -1939,6 +2224,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_0_15;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_0_15;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -1954,6 +2243,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_30_0;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_30_0;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_30_0.m4a";
                                 voiceUserList.add(fileName0);
@@ -1963,6 +2256,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_0_30;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_0_30;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -1978,6 +2275,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_40_0;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_40_0;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_40_0.m4a";
                                 voiceUserList.add(fileName0);
@@ -1987,6 +2288,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_0_40;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_0_40;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -2002,6 +2307,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_0_15;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_0_15;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_0_15.m4a";
                                 voiceUserList.add(fileName0);
@@ -2013,6 +2322,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_15_0;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_15_0;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_15_0.m4a";
                                 voiceUserList.add(fileName0);
@@ -2022,6 +2335,10 @@ public class PointActivity extends WearableActivity {
                     switch (current_voice_type) {
                         case GBR_MAN:
                             call = R.raw.gbr_man_15_15;
+                            voiceList.add(call);
+                            break;
+                        case GBR_WOMAN:
+                            call = R.raw.gbr_woman_15_15;
                             voiceList.add(call);
                             break;
                         case USER_RECORD:
@@ -2036,6 +2353,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_30_15;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_30_15;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_30_15.m4a";
                                 voiceUserList.add(fileName0);
@@ -2045,6 +2366,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_15_30;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_15_30;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -2060,6 +2385,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_40_15;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_40_15;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_40_15.m4a";
                                 voiceUserList.add(fileName0);
@@ -2069,6 +2398,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_15_40;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_15_40;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -2084,6 +2417,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_0_30;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_0_30;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_0_30.m4a";
                                 voiceUserList.add(fileName0);
@@ -2093,6 +2430,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_30_0;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_30_0;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -2108,6 +2449,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_15_30;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_15_30;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_15_30.m4a";
                                 voiceUserList.add(fileName0);
@@ -2117,6 +2462,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_30_15;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_30_15;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -2131,6 +2480,10 @@ public class PointActivity extends WearableActivity {
                             call = R.raw.gbr_man_30_30;
                             voiceList.add(call);
                             break;
+                        case GBR_WOMAN:
+                            call = R.raw.gbr_woman_30_30;
+                            voiceList.add(call);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_30_30.m4a";
                             voiceUserList.add(fileName0);
@@ -2143,6 +2496,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_40_30;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_40_30;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_40_30.m4a";
                                 voiceUserList.add(fileName0);
@@ -2152,6 +2509,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_30_40;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_30_40;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -2167,6 +2528,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_0_40;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_0_40;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_0_40.m4a";
                                 voiceUserList.add(fileName0);
@@ -2176,6 +2541,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_40_0;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_40_0;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -2191,6 +2560,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_15_40;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_15_40;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_15_40.m4a";
                                 voiceUserList.add(fileName0);
@@ -2200,6 +2573,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_40_15;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_40_15;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -2215,6 +2592,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_30_40;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_30_40;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_30_40.m4a";
                                 voiceUserList.add(fileName0);
@@ -2224,6 +2605,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_40_30;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_40_30;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -2240,6 +2625,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_40_40;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_40_40;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_40_40.m4a";
                                 voiceUserList.add(fileName0);
@@ -2249,6 +2638,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_deciding_point;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_deciding_point;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -2267,6 +2660,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_ad_serve;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_ad_serve;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_ad.m4a";
                                 voiceUserList.add(fileName0);
@@ -2279,6 +2676,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_ad_recv;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_ad_recv;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -2299,6 +2700,10 @@ public class PointActivity extends WearableActivity {
                                 call = R.raw.gbr_man_ad_recv;
                                 voiceList.add(call);
                                 break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_ad_recv;
+                                voiceList.add(call);
+                                break;
                             case USER_RECORD:
                                 fileName0 = "user_ad.m4a";
                                 voiceUserList.add(fileName0);
@@ -2310,6 +2715,10 @@ public class PointActivity extends WearableActivity {
                         switch (current_voice_type) {
                             case GBR_MAN:
                                 call = R.raw.gbr_man_ad_serve;
+                                voiceList.add(call);
+                                break;
+                            case GBR_WOMAN:
+                                call = R.raw.gbr_woman_ad_serve;
                                 voiceList.add(call);
                                 break;
                             case USER_RECORD:
@@ -2332,6 +2741,7 @@ public class PointActivity extends WearableActivity {
                     if (down_serve) { //you serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart(down_point);
                                 voiceList.add(call);
 
@@ -2353,6 +2763,7 @@ public class PointActivity extends WearableActivity {
                     } else { //oppt serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart((byte)0); //0
                                 voiceList.add(call);
 
@@ -2376,6 +2787,7 @@ public class PointActivity extends WearableActivity {
                     if (down_serve) { //you serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart(down_point);
                                 voiceList.add(call);
 
@@ -2407,6 +2819,7 @@ public class PointActivity extends WearableActivity {
                     } else { //oppt serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart(up_point); //1
                                 voiceList.add(call);
 
@@ -2441,6 +2854,7 @@ public class PointActivity extends WearableActivity {
                     if (down_serve) { //you serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart(down_point);
                                 voiceList.add(call);
 
@@ -2471,6 +2885,7 @@ public class PointActivity extends WearableActivity {
                     } else { //oppt serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart(up_point); //2
                                 voiceList.add(call);
 
@@ -2504,6 +2919,7 @@ public class PointActivity extends WearableActivity {
                     if (down_serve) { //you serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart(down_point);
                                 voiceList.add(call);
 
@@ -2534,6 +2950,7 @@ public class PointActivity extends WearableActivity {
                     } else { //oppt serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart(up_point); //3
                                 voiceList.add(call);
 
@@ -2567,6 +2984,7 @@ public class PointActivity extends WearableActivity {
                     if (down_serve) { //you serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart(down_point);
                                 voiceList.add(call);
 
@@ -2597,6 +3015,7 @@ public class PointActivity extends WearableActivity {
                     } else { //oppt serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart(up_point); //4
                                 voiceList.add(call);
 
@@ -2630,6 +3049,7 @@ public class PointActivity extends WearableActivity {
                     if (down_serve) { //you serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart(down_point);
                                 voiceList.add(call);
 
@@ -2660,6 +3080,7 @@ public class PointActivity extends WearableActivity {
                     } else { //oppt serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart(up_point); //5
                                 voiceList.add(call);
 
@@ -2693,6 +3114,7 @@ public class PointActivity extends WearableActivity {
                     if (down_serve) { //you serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart(down_point);
                                 voiceList.add(call);
 
@@ -2724,6 +3146,7 @@ public class PointActivity extends WearableActivity {
                     } else { //oppt serve
                         switch (current_voice_type) {
                             case GBR_MAN:
+                            case GBR_WOMAN:
                                 call = getPointByNumStart(up_point); //6
                                 voiceList.add(call);
 
@@ -2762,6 +3185,7 @@ public class PointActivity extends WearableActivity {
                         if (up_point <= 20) {
                             switch (current_voice_type) {
                                 case GBR_MAN:
+                                case GBR_WOMAN:
                                     call = getPointByNumStart(up_point);
                                     voiceList.add(call);
                                     call2 = getPointByNumEnd((byte)100);
@@ -2779,6 +3203,7 @@ public class PointActivity extends WearableActivity {
                         } else { //up_point > 20
                             switch (current_voice_type) {
                                 case GBR_MAN:
+                                case GBR_WOMAN:
                                     if (up_point % 10 == 0) { //30, 40, 50, 60, 70, 80, 90
                                         call = getPointByNumStart(up_point);
                                         voiceList.add(call);
@@ -2811,6 +3236,7 @@ public class PointActivity extends WearableActivity {
                             if (down_serve) { //you serve
                                 switch (current_voice_type) {
                                     case GBR_MAN:
+                                    case GBR_WOMAN:
                                         call = getPointByNumStart(down_point);
                                         voiceList.add(call);
                                         call2 = getPointByNumEnd(up_point);
@@ -2829,6 +3255,7 @@ public class PointActivity extends WearableActivity {
                             } else { //oppt serve
                                 switch (current_voice_type) {
                                     case GBR_MAN:
+                                    case GBR_WOMAN:
                                         call = getPointByNumStart(up_point);
                                         voiceList.add(call);
                                         call2 = getPointByNumEnd(down_point);
@@ -2849,13 +3276,13 @@ public class PointActivity extends WearableActivity {
                             if (down_serve) { //you serve
                                 switch (current_voice_type) {
                                     case GBR_MAN:
+                                    case GBR_WOMAN:
                                         call = getPointByNumStart((byte)(down_point/10*10));
                                         voiceList.add(call);
                                         if (down_point%10 > 0) {
                                             call2 = getPointByNumStart((byte) (down_point % 10));
                                             voiceList.add(call2);
                                         }
-
 
                                         if (up_point%10 > 0) {
                                             call3 = getPointByNumStart((byte)(up_point/10*10));
@@ -2890,6 +3317,7 @@ public class PointActivity extends WearableActivity {
                             } else { //oppt serve
                                 switch (current_voice_type) {
                                     case GBR_MAN:
+                                    case GBR_WOMAN:
                                         call = getPointByNumStart((byte)(up_point/10*10));
                                         voiceList.add(call);
                                         if (up_point%10 > 0) {
@@ -2950,88 +3378,256 @@ public class PointActivity extends WearableActivity {
 
         switch (num) {
             case 0:
-                call = R.raw.gbr_man_start_love;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_love;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_love;
+                } else {
+                    call = R.raw.gbr_man_start_love;
+                }
                 break;
             case 1:
-                call = R.raw.gbr_man_start_1;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_1;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_1;
+                } else {
+                    call = R.raw.gbr_man_start_1;
+                }
                 break;
             case 2:
-                call = R.raw.gbr_man_start_2;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_2;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_2;
+                } else {
+                    call = R.raw.gbr_man_start_2;
+                }
                 break;
             case 3:
-                call = R.raw.gbr_man_start_3;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_3;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_3;
+                } else {
+                    call = R.raw.gbr_man_start_3;
+                }
                 break;
             case 4:
-                call = R.raw.gbr_man_start_4;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_4;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_4;
+                } else {
+                    call = R.raw.gbr_man_start_4;
+                }
                 break;
             case 5:
-                call = R.raw.gbr_man_start_5;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_5;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_5;
+                } else {
+                    call = R.raw.gbr_man_start_5;
+                }
                 break;
             case 6:
-                call = R.raw.gbr_man_start_6;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_6;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_6;
+                } else {
+                    call = R.raw.gbr_man_start_6;
+                }
                 break;
             case 7:
-                call = R.raw.gbr_man_start_7;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_7;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_7;
+                } else {
+                    call = R.raw.gbr_man_start_7;
+                }
                 break;
             case 8:
-                call = R.raw.gbr_man_start_8;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_8;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_8;
+                } else {
+                    call = R.raw.gbr_man_start_8;
+                }
                 break;
             case 9:
-                call = R.raw.gbr_man_start_9;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_9;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_9;
+                } else {
+                    call = R.raw.gbr_man_start_9;
+                }
                 break;
             case 10:
-                call = R.raw.gbr_man_start_10;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_10;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_10;
+                } else {
+                    call = R.raw.gbr_man_start_10;
+                }
                 break;
             case 11:
-                call = R.raw.gbr_man_start_11;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_11;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_11;
+                } else {
+                    call = R.raw.gbr_man_start_11;
+                }
                 break;
             case 12:
-                call = R.raw.gbr_man_start_12;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_12;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_12;
+                } else {
+                    call = R.raw.gbr_man_start_12;
+                }
                 break;
             case 13:
-                call = R.raw.gbr_man_start_13;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_13;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_13;
+                } else {
+                    call = R.raw.gbr_man_start_13;
+                }
                 break;
             case 14:
-                call = R.raw.gbr_man_start_14;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_14;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_14;
+                } else {
+                    call = R.raw.gbr_man_start_14;
+                }
                 break;
             case 15:
-                call = R.raw.gbr_man_start_15;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_15;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_15;
+                } else {
+                    call = R.raw.gbr_man_start_15;
+                }
                 break;
             case 16:
-                call = R.raw.gbr_man_start_16;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_16;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_16;
+                } else {
+                    call = R.raw.gbr_man_start_16;
+                }
                 break;
             case 17:
-                call = R.raw.gbr_man_start_17;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_17;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_17;
+                } else {
+                    call = R.raw.gbr_man_start_17;
+                }
                 break;
             case 18:
-                call = R.raw.gbr_man_start_18;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_18;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_18;
+                } else {
+                    call = R.raw.gbr_man_start_18;
+                }
                 break;
             case 19:
-                call = R.raw.gbr_man_start_19;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_19;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_19;
+                } else {
+                    call = R.raw.gbr_man_start_19;
+                }
                 break;
             case 20:
-                call = R.raw.gbr_man_start_20;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_20;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_20;
+                } else {
+                    call = R.raw.gbr_man_start_20;
+                }
                 break;
             case 30:
-                call = R.raw.gbr_man_start_30;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_30;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_30;
+                } else {
+                    call = R.raw.gbr_man_start_30;
+                }
                 break;
             case 40:
-                call = R.raw.gbr_man_start_40;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_40;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_40;
+                } else {
+                    call = R.raw.gbr_man_start_40;
+                }
                 break;
             case 50:
-                call = R.raw.gbr_man_start_50;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_50;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_50;
+                } else {
+                    call = R.raw.gbr_man_start_50;
+                }
                 break;
             case 60:
-                call = R.raw.gbr_man_start_60;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_60;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_60;
+                } else {
+                    call = R.raw.gbr_man_start_60;
+                }
                 break;
             case 70:
-                call = R.raw.gbr_man_start_70;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_70;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_70;
+                } else {
+                    call = R.raw.gbr_man_start_70;
+                }
                 break;
             case 80:
-                call = R.raw.gbr_man_start_80;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_80;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_80;
+                } else {
+                    call = R.raw.gbr_man_start_80;
+                }
                 break;
             case 90:
-                call = R.raw.gbr_man_start_90;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_start_90;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_start_90;
+                } else {
+                    call = R.raw.gbr_man_start_90;
+                }
                 break;
             //case 100:
             //    call = R.raw.gbr_man_all;
@@ -3046,91 +3642,265 @@ public class PointActivity extends WearableActivity {
 
         switch (num) {
             case 0:
-                call = R.raw.gbr_man_end_love;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_love;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_love;
+                } else {
+                    call = R.raw.gbr_man_end_love;
+                }
                 break;
             case 1:
-                call = R.raw.gbr_man_end_1;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_1;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_1;
+                } else {
+                    call = R.raw.gbr_man_end_1;
+                }
                 break;
             case 2:
-                call = R.raw.gbr_man_end_2;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_2;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_2;
+                } else {
+                    call = R.raw.gbr_man_end_2;
+                }
                 break;
             case 3:
-                call = R.raw.gbr_man_end_3;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_3;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_3;
+                } else {
+                    call = R.raw.gbr_man_end_3;
+                }
                 break;
             case 4:
-                call = R.raw.gbr_man_end_4;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_4;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_4;
+                } else {
+                    call = R.raw.gbr_man_end_4;
+                }
                 break;
             case 5:
-                call = R.raw.gbr_man_end_5;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_5;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_5;
+                } else {
+                    call = R.raw.gbr_man_end_5;
+                }
                 break;
             case 6:
-                call = R.raw.gbr_man_end_6;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_6;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_6;
+                } else {
+                    call = R.raw.gbr_man_end_6;
+                }
                 break;
             case 7:
-                call = R.raw.gbr_man_end_7;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_7;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_7;
+                } else {
+                    call = R.raw.gbr_man_end_7;
+                }
                 break;
             case 8:
-                call = R.raw.gbr_man_end_8;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_8;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_8;
+                } else {
+                    call = R.raw.gbr_man_end_8;
+                }
                 break;
             case 9:
-                call = R.raw.gbr_man_end_9;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_9;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_9;
+                } else {
+                    call = R.raw.gbr_man_end_9;
+                }
                 break;
             case 10:
-                call = R.raw.gbr_man_end_10;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_10;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_10;
+                } else {
+                    call = R.raw.gbr_man_end_10;
+                }
                 break;
             case 11:
-                call = R.raw.gbr_man_end_11;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_11;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_11;
+                } else {
+                    call = R.raw.gbr_man_end_11;
+                }
                 break;
             case 12:
-                call = R.raw.gbr_man_end_12;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_12;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_12;
+                } else {
+                    call = R.raw.gbr_man_end_12;
+                }
                 break;
             case 13:
-                call = R.raw.gbr_man_end_13;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_13;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_13;
+                } else {
+                    call = R.raw.gbr_man_end_13;
+                }
                 break;
             case 14:
-                call = R.raw.gbr_man_end_14;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_14;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_14;
+                } else {
+                    call = R.raw.gbr_man_end_14;
+                }
                 break;
             case 15:
-                call = R.raw.gbr_man_end_15;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_15;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_15;
+                } else {
+                    call = R.raw.gbr_man_end_15;
+                }
                 break;
             case 16:
-                call = R.raw.gbr_man_end_16;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_16;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_16;
+                } else {
+                    call = R.raw.gbr_man_end_16;
+                }
                 break;
             case 17:
-                call = R.raw.gbr_man_end_17;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_17;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_17;
+                } else {
+                    call = R.raw.gbr_man_end_17;
+                }
                 break;
             case 18:
-                call = R.raw.gbr_man_end_18;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_18;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_18;
+                } else {
+                    call = R.raw.gbr_man_end_18;
+                }
                 break;
             case 19:
-                call = R.raw.gbr_man_end_19;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_19;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_19;
+                } else {
+                    call = R.raw.gbr_man_end_19;
+                }
                 break;
             case 20:
-                call = R.raw.gbr_man_end_20;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_20;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_20;
+                } else {
+                    call = R.raw.gbr_man_end_20;
+                }
                 break;
             case 30:
-                call = R.raw.gbr_man_end_30;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_30;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_30;
+                } else {
+                    call = R.raw.gbr_man_end_30;
+                }
                 break;
             case 40:
-                call = R.raw.gbr_man_end_40;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_40;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_40;
+                } else {
+                    call = R.raw.gbr_man_end_40;
+                }
                 break;
             case 50:
-                call = R.raw.gbr_man_end_50;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_50;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_50;
+                } else {
+                    call = R.raw.gbr_man_end_50;
+                }
                 break;
             case 60:
-                call = R.raw.gbr_man_end_60;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_60;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_60;
+                } else {
+                    call = R.raw.gbr_man_end_60;
+                }
                 break;
             case 70:
-                call = R.raw.gbr_man_end_70;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_70;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_70;
+                } else {
+                    call = R.raw.gbr_man_end_70;
+                }
                 break;
             case 80:
-                call = R.raw.gbr_man_end_80;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_80;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_80;
+                } else {
+                    call = R.raw.gbr_man_end_80;
+                }
                 break;
             case 90:
-                call = R.raw.gbr_man_end_90;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_end_90;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_end_90;
+                } else {
+                    call = R.raw.gbr_man_end_90;
+                }
                 break;
             case 100:
-                call = R.raw.gbr_man_all;
+                if (current_voice_type == GBR_MAN) {
+                    call = R.raw.gbr_man_all;
+                } else if (current_voice_type == GBR_WOMAN) {
+                    call = R.raw.gbr_woman_all;
+                } else {
+                    call = R.raw.gbr_man_all;
+                }
                 break;
         }
 
@@ -3235,11 +4005,11 @@ public class PointActivity extends WearableActivity {
 
     private static void chooseGameVoice(boolean down_serve, boolean is_tiebreak, byte gameUp,  byte gameDown) {
         Integer gameCall, gameCall2, gameCall3;
-        String fileName0, fileName1, fileName2, fileName3;
+        String fileName0, fileName1, fileName2;
         Log.d(TAG, "[chooseGameVoice start]");
         if (is_tiebreak) { //enter tiebreak
             Log.d(TAG, "in tiebreak");
-            /*if (games.equals("0")) { //6 game in a set
+            if (games.equals("0")) { //6 game in a set
                 switch (current_voice_type) {
                     case GBR_MAN:
                         gameCall = R.raw.gbr_man_6;
@@ -3247,6 +4017,14 @@ public class PointActivity extends WearableActivity {
                         gameCall2 = R.raw.gbr_man_all;
                         voiceList.add(gameCall2);
                         gameCall3 = R.raw.gbr_man_tiebreak;
+                        voiceList.add(gameCall3);
+                        break;
+                    case GBR_WOMAN:
+                        gameCall = R.raw.gbr_woman_start_6;
+                        voiceList.add(gameCall);
+                        gameCall2 = R.raw.gbr_woman_all;
+                        voiceList.add(gameCall2);
+                        gameCall3 = R.raw.gbr_woman_tiebreak;
                         voiceList.add(gameCall3);
                         break;
                     case USER_RECORD:
@@ -3261,11 +4039,19 @@ public class PointActivity extends WearableActivity {
             } else { //4 game in a set
                 switch (current_voice_type) {
                     case GBR_MAN:
-                        gameCall = R.raw.gbr_man_4;
+                        gameCall = R.raw.gbr_man_start_4;
                         voiceList.add(gameCall);
                         gameCall2 = R.raw.gbr_man_all;
                         voiceList.add(gameCall2);
                         gameCall3 = R.raw.gbr_man_tiebreak;
+                        voiceList.add(gameCall3);
+                        break;
+                    case GBR_WOMAN:
+                        gameCall = R.raw.gbr_woman_start_4;
+                        voiceList.add(gameCall);
+                        gameCall2 = R.raw.gbr_woman_all;
+                        voiceList.add(gameCall2);
+                        gameCall3 = R.raw.gbr_woman_tiebreak;
                         voiceList.add(gameCall3);
                         break;
                     case USER_RECORD:
@@ -3277,25 +4063,8 @@ public class PointActivity extends WearableActivity {
                         voiceUserList.add(fileName2);
                         break;
                 }
-            }*/
-            switch (current_voice_type) {
-                case GBR_MAN:
-                    gameCall = R.raw.gbr_man_6;
-                    voiceList.add(gameCall);
-                    gameCall2 = R.raw.gbr_man_all;
-                    voiceList.add(gameCall2);
-                    gameCall3 = R.raw.gbr_man_tiebreak;
-                    voiceList.add(gameCall3);
-                    break;
-                case USER_RECORD:
-                    fileName0 = "user_6.m4a";
-                    voiceUserList.add(fileName0);
-                    fileName1 = "user_games_all.m4a";
-                    voiceUserList.add(fileName1);
-                    fileName2 = "user_tiebreak.m4a";
-                    voiceUserList.add(fileName2);
-                    break;
             }
+
 
 
         } else {
@@ -3308,6 +4077,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_1;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_love;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_1;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_love;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3326,6 +4101,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_love;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_1;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_love;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_1;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3348,6 +4129,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_love;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_love;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_2;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_2.m4a";
                             voiceUserList.add(fileName0);
@@ -3364,6 +4151,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_love;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_2;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_love;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_2;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3386,6 +4179,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_love;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_3;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_love;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_3.m4a";
                             voiceUserList.add(fileName0);
@@ -3402,6 +4201,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_love;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_3;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_love;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_3;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3424,6 +4229,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_love;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_4;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_love;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_4.m4a";
                             voiceUserList.add(fileName0);
@@ -3441,6 +4252,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_love;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_4;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_love;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_4;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3463,6 +4280,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_love;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_love;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_5.m4a";
                             voiceUserList.add(fileName0);
@@ -3479,6 +4302,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_love;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_5;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_love;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3501,6 +4330,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_love;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_love;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_6.m4a";
                             voiceUserList.add(fileName0);
@@ -3517,6 +4352,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_love;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_6;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_love;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3539,6 +4380,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_1;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_love;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_1;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_love.m4a";
                             voiceUserList.add(fileName0);
@@ -3555,6 +4402,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_1;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_love;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_1;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_love;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3576,6 +4429,12 @@ public class PointActivity extends WearableActivity {
                         gameCall2 = R.raw.gbr_man_all;
                         voiceList.add(gameCall2);
                         break;
+                    case GBR_WOMAN:
+                        gameCall = R.raw.gbr_woman_start_1;
+                        voiceList.add(gameCall);
+                        gameCall2 = R.raw.gbr_woman_all;
+                        voiceList.add(gameCall2);
+                        break;
                     case USER_RECORD:
                         fileName0 = "user_1.m4a";
                         voiceUserList.add(fileName0);
@@ -3594,6 +4453,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_1;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_2;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_1;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_2.m4a";
                             voiceUserList.add(fileName0);
@@ -3610,6 +4475,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_1;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_2;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_1;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_2;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3632,6 +4503,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_1;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_3;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_1;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_3.m4a";
                             voiceUserList.add(fileName0);
@@ -3648,6 +4525,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_1;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_3;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_1;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_3;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3670,6 +4553,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_1;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_4;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_1;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_4.m4a";
                             voiceUserList.add(fileName0);
@@ -3686,6 +4575,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_1;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_4;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_1;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_4;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3708,6 +4603,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_1;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_1;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_5.m4a";
                             voiceUserList.add(fileName0);
@@ -3724,6 +4625,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_1;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_5;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_1;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3746,6 +4653,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_1;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_1;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_6.m4a";
                             voiceUserList.add(fileName0);
@@ -3762,6 +4675,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_1;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_6;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_1;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3784,6 +4703,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_2;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_love;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_2;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_love.m4a";
                             voiceUserList.add(fileName0);
@@ -3800,6 +4725,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_2;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_love;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_2;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_love;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3822,6 +4753,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_2;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_1;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_2;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_1.m4a";
                             voiceUserList.add(fileName0);
@@ -3838,6 +4775,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_2;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_1;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_2;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_1;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3857,6 +4800,12 @@ public class PointActivity extends WearableActivity {
                         gameCall = R.raw.gbr_man_2;
                         voiceList.add(gameCall);
                         gameCall2 = R.raw.gbr_man_all;
+                        voiceList.add(gameCall2);
+                        break;
+                    case GBR_WOMAN:
+                        gameCall = R.raw.gbr_woman_start_2;
+                        voiceList.add(gameCall);
+                        gameCall2 = R.raw.gbr_woman_all;
                         voiceList.add(gameCall2);
                         break;
                     case USER_RECORD:
@@ -3893,6 +4842,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_3;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_2;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_3;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_2.m4a";
                             voiceUserList.add(fileName0);
@@ -3913,6 +4868,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_2;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_4;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_2;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_4.m4a";
                             voiceUserList.add(fileName0);
@@ -3929,6 +4890,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_2;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_4;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_2;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_4;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3951,6 +4918,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_2;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_2;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_5.m4a";
                             voiceUserList.add(fileName0);
@@ -3967,6 +4940,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_2;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_5;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_2;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -3989,6 +4968,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_2;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_2;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_6.m4a";
                             voiceUserList.add(fileName0);
@@ -4005,6 +4990,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_2;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_6;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_2;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4027,6 +5018,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_3;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_love;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_3;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_love.m4a";
                             voiceUserList.add(fileName0);
@@ -4043,6 +5040,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_3;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_love;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_3;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_love;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4065,6 +5068,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_3;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_1;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_3;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_1.m4a";
                             voiceUserList.add(fileName0);
@@ -4081,6 +5090,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_3;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_1;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_3;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_1;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4103,6 +5118,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_3;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_2;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_3;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_2.m4a";
                             voiceUserList.add(fileName0);
@@ -4119,6 +5140,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_3;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_2;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_3;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_2;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4140,6 +5167,12 @@ public class PointActivity extends WearableActivity {
                         gameCall2 = R.raw.gbr_man_all;
                         voiceList.add(gameCall2);
                         break;
+                    case GBR_WOMAN:
+                        gameCall = R.raw.gbr_woman_start_3;
+                        voiceList.add(gameCall);
+                        gameCall2 = R.raw.gbr_woman_all;
+                        voiceList.add(gameCall2);
+                        break;
                     case USER_RECORD:
                         fileName0 = "user_3.m4a";
                         voiceUserList.add(fileName0);
@@ -4154,6 +5187,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_4;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_3;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_4;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_3;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4172,6 +5211,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_3;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_4;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_3;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_4;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4194,6 +5239,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_3;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_3;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_5.m4a";
                             voiceUserList.add(fileName0);
@@ -4210,6 +5261,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_3;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_5;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_3;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4232,6 +5289,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_3;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_3;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_6.m4a";
                             voiceUserList.add(fileName0);
@@ -4248,6 +5311,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_3;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_6;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_3;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4270,6 +5339,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_4;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_love;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_4;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_love.m4a";
                             voiceUserList.add(fileName0);
@@ -4286,6 +5361,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_4;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_love;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_4;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_love;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4308,6 +5389,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_4;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_1;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_4;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_1.m4a";
                             voiceUserList.add(fileName0);
@@ -4324,6 +5411,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_4;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_1;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_4;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_1;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4347,6 +5440,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_4;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_2;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_4;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_2.m4a";
                             voiceUserList.add(fileName0);
@@ -4363,6 +5462,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_4;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_2;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_4;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_2;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4385,6 +5490,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_4;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_3;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_4;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_3.m4a";
                             voiceUserList.add(fileName0);
@@ -4401,6 +5512,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_4;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_3;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_4;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_3;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4422,6 +5539,12 @@ public class PointActivity extends WearableActivity {
                         gameCall2 = R.raw.gbr_man_all;
                         voiceList.add(gameCall2);
                         break;
+                    case GBR_WOMAN:
+                        gameCall = R.raw.gbr_woman_start_4;
+                        voiceList.add(gameCall);
+                        gameCall2 = R.raw.gbr_woman_all;
+                        voiceList.add(gameCall2);
+                        break;
                     case USER_RECORD:
                         fileName0 = "user_4.m4a";
                         voiceUserList.add(fileName0);
@@ -4437,6 +5560,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_5;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_4;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_4;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4456,6 +5585,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_4;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_5;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_4;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4478,6 +5613,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_4;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_4;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_6.m4a";
                             voiceUserList.add(fileName0);
@@ -4494,6 +5635,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_4;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_6;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_4;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4516,6 +5663,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_5;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_love;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_love.m4a";
                             voiceUserList.add(fileName0);
@@ -4532,6 +5685,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_5;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_love;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_love;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4554,6 +5713,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_5;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_1;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_1.m4a";
                             voiceUserList.add(fileName0);
@@ -4570,6 +5735,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_5;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_1;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_1;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4592,6 +5763,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_5;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_2;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_2.m4a";
                             voiceUserList.add(fileName0);
@@ -4608,6 +5785,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_5;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_2;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_2;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4630,6 +5813,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_5;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_3;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_3.m4a";
                             voiceUserList.add(fileName0);
@@ -4646,6 +5835,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_5;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_3;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_3;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4668,6 +5863,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_5;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_4;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_4.m4a";
                             voiceUserList.add(fileName0);
@@ -4684,6 +5885,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_5;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_4;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_4;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4705,6 +5912,12 @@ public class PointActivity extends WearableActivity {
                         gameCall2 = R.raw.gbr_man_all;
                         voiceList.add(gameCall2);
                         break;
+                    case GBR_WOMAN:
+                        gameCall = R.raw.gbr_woman_start_5;
+                        voiceList.add(gameCall);
+                        gameCall2 = R.raw.gbr_woman_all;
+                        voiceList.add(gameCall2);
+                        break;
                     case USER_RECORD:
                         fileName0 = "user_5.m4a";
                         voiceUserList.add(fileName0);
@@ -4719,6 +5932,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_6;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_5;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4737,6 +5956,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_5;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_6;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4759,6 +5984,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_5;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_7;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_7.m4a";
                             voiceUserList.add(fileName0);
@@ -4775,6 +6006,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_5;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_7;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_7;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4797,6 +6034,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_6;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_love;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_love.m4a";
                             voiceUserList.add(fileName0);
@@ -4814,6 +6057,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_6;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_love;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_love;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4836,6 +6085,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_6;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_1;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_1.m4a";
                             voiceUserList.add(fileName0);
@@ -4852,6 +6107,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_6;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_1;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_1;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4874,6 +6135,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_6;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_2;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_2.m4a";
                             voiceUserList.add(fileName0);
@@ -4889,6 +6156,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_6;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_2;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_2;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4911,6 +6184,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_6;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_3;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_3.m4a";
                             voiceUserList.add(fileName0);
@@ -4927,6 +6206,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_6;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_3;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_3;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4949,6 +6234,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_6;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_4;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_4.m4a";
                             voiceUserList.add(fileName0);
@@ -4965,6 +6256,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_6;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_4;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_4;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -4987,6 +6284,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_6;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_5.m4a";
                             voiceUserList.add(fileName0);
@@ -5003,6 +6306,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_6;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_5;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -5024,6 +6333,12 @@ public class PointActivity extends WearableActivity {
                         gameCall2 = R.raw.gbr_man_all;
                         voiceList.add(gameCall2);
                         break;
+                    case GBR_WOMAN:
+                        gameCall = R.raw.gbr_woman_start_6;
+                        voiceList.add(gameCall);
+                        gameCall2 = R.raw.gbr_woman_all;
+                        voiceList.add(gameCall2);
+                        break;
                     case USER_RECORD:
                         fileName0 = "user_6.m4a";
                         voiceUserList.add(fileName0);
@@ -5038,6 +6353,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_7;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_6;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_7;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -5056,6 +6377,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_6;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_7;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_7;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -5078,6 +6405,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_7;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_5;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_7;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_5.m4a";
                             voiceUserList.add(fileName0);
@@ -5093,6 +6426,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_7;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_5;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_7;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_5;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -5115,6 +6454,12 @@ public class PointActivity extends WearableActivity {
                             gameCall2 = R.raw.gbr_man_7;
                             voiceList.add(gameCall2);
                             break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_6;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_7;
+                            voiceList.add(gameCall2);
+                            break;
                         case USER_RECORD:
                             fileName0 = "user_6.m4a";
                             voiceUserList.add(fileName0);
@@ -5131,6 +6476,12 @@ public class PointActivity extends WearableActivity {
                             gameCall = R.raw.gbr_man_7;
                             voiceList.add(gameCall);
                             gameCall2 = R.raw.gbr_man_6;
+                            voiceList.add(gameCall2);
+                            break;
+                        case GBR_WOMAN:
+                            gameCall = R.raw.gbr_woman_start_7;
+                            voiceList.add(gameCall);
+                            gameCall2 = R.raw.gbr_woman_end_6;
                             voiceList.add(gameCall2);
                             break;
                         case USER_RECORD:
@@ -5165,6 +6516,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_1;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_love;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_1;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_love.m4a";
                     voiceUserList.add(fileName0);
@@ -5180,6 +6537,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_love;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_2;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_love;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_2;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5198,6 +6561,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_3;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_love;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_3;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_love.m4a";
                     voiceUserList.add(fileName0);
@@ -5211,6 +6580,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_love;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_4;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_love;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_4;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5228,6 +6603,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_5;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_love;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_5;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_love.m4a";
                     voiceUserList.add(fileName0);
@@ -5243,6 +6624,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_6;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_love;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_6;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_love.m4a";
                     voiceUserList.add(fileName0);
@@ -5256,6 +6643,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_1;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_love;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_1;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_love;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5274,6 +6667,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_all;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_1;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_all;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_1.m4a";
                     voiceUserList.add(fileName0);
@@ -5288,6 +6687,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_1;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_2;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_1;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_2;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5306,6 +6711,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_3;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_1;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_3;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_1.m4a";
                     voiceUserList.add(fileName0);
@@ -5320,6 +6731,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_1;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_4;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_1;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_4;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5338,6 +6755,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_5;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_1;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_5;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_1.m4a";
                     voiceUserList.add(fileName0);
@@ -5352,6 +6775,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_1;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_6;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_1;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_6;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5371,6 +6800,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_love;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_2;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_love;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_2e.m4a";
                     voiceUserList.add(fileName0);
@@ -5385,6 +6820,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_2;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_1;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_2;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_1;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5404,6 +6845,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_all;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_2;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_all;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_2.m4a";
                     voiceUserList.add(fileName0);
@@ -5418,6 +6865,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_2;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_3;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_2;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_3;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5436,6 +6889,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_4;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_2;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_4;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_2.m4a";
                     voiceUserList.add(fileName0);
@@ -5450,6 +6909,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_2;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_5;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_2;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_5;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5468,6 +6933,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_6;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_2;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_6;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_2.m4a";
                     voiceUserList.add(fileName0);
@@ -5482,6 +6953,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_3;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_love;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_3;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_love;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5500,6 +6977,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_1;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_3;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_1;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_3.m4a";
                     voiceUserList.add(fileName0);
@@ -5514,6 +6997,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_3;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_2;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_3;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_2;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5532,6 +7021,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_all;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_3;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_all;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_3.m4a";
                     voiceUserList.add(fileName0);
@@ -5546,6 +7041,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_3;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_4;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_3;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_love;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5564,6 +7065,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_5;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_3;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_5;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_3.m4a";
                     voiceUserList.add(fileName0);
@@ -5578,6 +7085,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_3;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_6;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_3;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_6;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5596,6 +7109,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_love;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_4;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_love;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_4.m4a";
                     voiceUserList.add(fileName0);
@@ -5610,6 +7129,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_4;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_1;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_4;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_1;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5628,6 +7153,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_2;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_4;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_2;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_4.m4a";
                     voiceUserList.add(fileName0);
@@ -5642,6 +7173,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_4;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_3;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_4;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_3;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5660,6 +7197,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_all;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_4;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_all;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_4.m4a";
                     voiceUserList.add(fileName0);
@@ -5674,6 +7217,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_4;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_5;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_4;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_5;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5692,6 +7241,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_6;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_4;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_6;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_4.m4a";
                     voiceUserList.add(fileName0);
@@ -5706,6 +7261,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_5;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_love;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_5;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_love;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5724,6 +7285,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_1;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_5;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_1;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_5.m4a";
                     voiceUserList.add(fileName0);
@@ -5738,6 +7305,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_5;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_2;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_5;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_2;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5756,6 +7329,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_3;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_5;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_3;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_5.m4a";
                     voiceUserList.add(fileName0);
@@ -5770,6 +7349,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_5;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_4;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_5;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_4;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5788,6 +7373,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_all;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_5;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_all;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_5.m4a";
                     voiceUserList.add(fileName0);
@@ -5802,6 +7393,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_5;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_6;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_5;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_6;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5820,6 +7417,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_7;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_5;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_7;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_5.m4a";
                     voiceUserList.add(fileName0);
@@ -5834,6 +7437,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_6;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_love;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_6;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_love;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5852,6 +7461,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_1;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_6;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_1;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_6.m4a";
                     voiceUserList.add(fileName0);
@@ -5866,6 +7481,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_6;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_2;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_6;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_2;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5884,6 +7505,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_3;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_6;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_3;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_6.m4a";
                     voiceUserList.add(fileName0);
@@ -5898,6 +7525,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_6;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_4;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_6;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_4;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5916,6 +7549,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_5;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_6;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_5;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_6.m4a";
                     voiceUserList.add(fileName0);
@@ -5930,6 +7569,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_6;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_all;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_6;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_6;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -5948,6 +7593,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_7;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_6;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_7;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_6.m4a";
                     voiceUserList.add(fileName0);
@@ -5964,6 +7615,12 @@ public class PointActivity extends WearableActivity {
                     gameCall2 = R.raw.gbr_man_5;
                     voiceList.add(gameCall2);
                     break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_7;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_5;
+                    voiceList.add(gameCall2);
+                    break;
                 case USER_RECORD:
                     fileName0 = "user_7.m4a";
                     voiceUserList.add(fileName0);
@@ -5978,6 +7635,12 @@ public class PointActivity extends WearableActivity {
                     gameCall = R.raw.gbr_man_7;
                     voiceList.add(gameCall);
                     gameCall2 = R.raw.gbr_man_6;
+                    voiceList.add(gameCall2);
+                    break;
+                case GBR_WOMAN:
+                    gameCall = R.raw.gbr_woman_start_7;
+                    voiceList.add(gameCall);
+                    gameCall2 = R.raw.gbr_woman_end_6;
                     voiceList.add(gameCall2);
                     break;
                 case USER_RECORD:
@@ -6147,6 +7810,8 @@ public class PointActivity extends WearableActivity {
                         state_msg = s.getWho_win_this_point() + ";" + state_msg;
                 }
                 message = message + state_msg;
+            } else { //stack is empty
+                message = "init;"+set+";"+games+";"+tiebreak+";"+deuce+";"+serve+";"+startTime;
             }
 
             syncSendCommand(message);

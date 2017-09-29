@@ -59,6 +59,11 @@ public class VoiceSelectActivity extends WearableActivity implements IabBroadcas
     ArrayList<String> additionalSkuList = new ArrayList<>();
     private int previous_select = 0;
     private int current_voice;
+
+    //buying save
+    private static boolean voice_support_gbr_woman = false;
+    private static boolean voice_support_gbr_user_record = false;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,7 +76,9 @@ public class VoiceSelectActivity extends WearableActivity implements IabBroadcas
         pref = getSharedPreferences(FILE_NAME, MODE_PRIVATE);
         current_voice = pref.getInt("VOICE_SELECT", 0);
 
-
+        //load buying
+        voice_support_gbr_woman = pref.getBoolean("VOICE_SUPPORT_GBR_WOMAN", false);
+        voice_support_gbr_user_record = pref.getBoolean("VOICE_SUPPORT_USER_RECORD", false);
 
         setContentView(R.layout.voice_select_activity);
         ImageView imageViewBack = findViewById(R.id.imageViewBack);

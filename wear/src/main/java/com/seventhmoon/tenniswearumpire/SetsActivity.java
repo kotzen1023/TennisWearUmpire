@@ -166,6 +166,7 @@ public class SetsActivity extends WearableActivity {
         myList_games_in_set.add(getResources().getString(R.string.setup_four_game));
         gameInSet_WheelPicker.setData(myList_games_in_set);
 
+        myList_tiebreak.clear();
         myList_tiebreak.add(getResources().getString(R.string.setup_tiebreak));
         myList_tiebreak.add(getResources().getString(R.string.setup_deciding_game));
         tieBreak_WheelPicker.setData(myList_tiebreak);
@@ -214,10 +215,12 @@ public class SetsActivity extends WearableActivity {
                 tiebreak_selected = i;
 
                 Intent newIntent = new Intent(SetsActivity.this, DialogActivity.class);
-                if (i == 0) {
-                    newIntent.putExtra("TITLE", myList_tiebreak.get(tiebreak_selected));
-                } else {
+                if (i == 1) {
                     newIntent.putExtra("TITLE", myList_tiebreak.get(tiebreak_selected)+" "+getResources().getString(R.string.setup_game));
+                } else if (i == 2) {
+                    newIntent.putExtra("TITLE", getResources().getString(R.string.dialog_super_tiebreak));
+                } else {
+                    newIntent.putExtra("TITLE", myList_tiebreak.get(tiebreak_selected));
                 }
                 startActivityForResult(newIntent, REQUEST_CODE);
 
@@ -390,6 +393,15 @@ public class SetsActivity extends WearableActivity {
 
                     frameLayout.setVisibility(View.VISIBLE);
                 } else if (current_choose == 1) { //games in set select
+
+                    myList_tiebreak.clear();
+                    myList_tiebreak.add(getResources().getString(R.string.setup_tiebreak));
+                    myList_tiebreak.add(getResources().getString(R.string.setup_deciding_game));
+
+                    if (selected > 0 && games_in_set_selected == 0) { //3,5 sets. 6 games
+                        myList_tiebreak.add(getResources().getString(R.string.setup_super_tiebreak));
+                    }
+                    tieBreak_WheelPicker.setData(myList_tiebreak);
 
                     wheelPicker.setVisibility(View.GONE);
                     gameInSet_WheelPicker.setVisibility(View.GONE);

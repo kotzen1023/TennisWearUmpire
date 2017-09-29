@@ -4,12 +4,12 @@
     <string name="setup_one_set">1 盤</string>
     <string name="setup_three_sets">3 盤</string>
     <string name="setup_five_sets">5 盤</string>
-    <string name="setup_six_games">6局</string>
-    <string name="setup_four_game">4局</string>
+    <string name="setup_six_games">6 局 </string>
+    <string name="setup_four_game">4 局 </string>
     <string name="setup_tiebreak">Tiebreak</string>
     <string name="setup_deuce">Deuce</string>
-    <string name="setup_deciding_game">決勝局</string>
-    <string name="setup_deciding_point">決勝分</string>
+    <string name="setup_deciding_game">決勝</string>
+    <string name="setup_deciding_point">決勝</string>
     <string name="setup_serve_first">先發球</string>
     <string name="setup_receive">接發球</string>
     <string name="setup_confirm">確定</string>
@@ -49,7 +49,7 @@
     <string name="point_game_is_finish">比賽已結束</string>
     <string name="select_games">選擇局數:</string>
     <string name="voice_support">語音</string>
-    <string name="voice_support_gbr_man">語音 英國 (男)\n(免費)</string>
+    <string name="voice_support_gbr_man">語音 英國 (男)</string>
     <string name="voice_support_gbr_woman">語音 英國 (女)</string>
     <string name="voice_support_buy">購買</string>
     <string name="voice_on">語音 開啟</string>
@@ -58,4 +58,6 @@
     <string name="setup_a_set">一盤</string>
     <string name="setup_game">局</string>
     <string name="setup_point">分</string>
+    <string name="setup_super_tiebreak">S-Tiebreak</string>
+    <string name="dialog_super_tiebreak">Super Tibreak</string>
 </resources>
